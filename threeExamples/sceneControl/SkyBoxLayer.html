@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天空盒效果示例</title>
+    <style>
+        html,
+        body,
+        #map-container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .control-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .category-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .category-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .category-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            padding-left: 5px;
+            border-left: 3px solid #4285f4;
+        }
+        .control-panel button {
+            padding: 8px 12px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #4285f4;
+            color: white;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            text-align: center;
+        }
+        .control-panel button:hover {
+            background: #3367d6;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+        .control-panel button.active {
+            background: #1a73e8 !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        /* 简化后的样式 */
+    </style>
+</head>
+<body>
+    <div id="map-container">
+        <!-- 背景控制按钮面板 -->
+        <div class="control-panel">
+            <!-- 颜色背景分类 -->
+            <div class="category-section">
+                <div class="category-title">颜色背景</div>
+                <button data-bg="#141111">深色背景</button>
+                <button data-bg="#ffffff">白色背景</button>
+                <button data-bg="#87ceeb">天空蓝背景</button>
+                <button data-bg="#1e90ff">蓝色天空</button>
+                <button data-bg="#ff0000">红色天空</button>
+            </div>
+            
+            <!-- 天空盒背景分类 -->
+            <div class="category-section">
+                <div class="category-title">天空盒背景</div>
+                <button data-bg="./data/skyBox/SunnySky/" data-type="skybox">
+                    晴天天空盒
+                </button>
+                <button data-bg="./data/skyBox/CloudySky/" data-type="skybox">
+                    多云天空盒
+                </button>
+                <button data-bg="./data/skyBox/Dark/" data-type="skybox">
+                    黑夜天空盒
+                </button>
+                <button data-bg="./data/skyBox/MilkyWay/" data-type="skybox">
+                    星空天空盒
+                </button>
+                <button data-bg="./data/skyBox/NightSky/" data-type="skybox">
+                    夜空天空盒
+                </button>
+            </div>
+            
+            <!-- 图片背景分类 -->
+            <div class="category-section">
+                <div class="category-title">图片背景</div>
+                <button data-bg="./data/imgs/bg1.jpg" data-type="image">
+                    图片背景1
+                </button>
+            </div>
+            
+            <!-- 功能按钮 -->
+            <div class="category-section">
+                <div class="category-title">功能操作</div>
+                <button data-bg="clear">清空背景</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import triLab from './TriLab.js'; 
+
+        // 地图中心点（UTM 坐标）
+        let center = [2938834.56, 4851421.1815];
+        // 初始化 TriLab
+        const map = new triLab.Map("map-container", {
+            center: center,
+            autoRotate: false,
+            zoom:18,
+            yaw: 0,
+            pitch: 75,
+        });
+
+        let currentLayer = null;
+
+        // 移除当前图层
+        function removeCurrentLayer() {
+            if (currentLayer) {
+                map.removeLayer(currentLayer);
+                currentLayer = null;
+            }
+        }
+
+        // 简单设置背景
+        function setBackground(bgValue, bgType) {
+            if (bgValue === "clear") {
+                map.viewer.setBackground(null);
+                if (map.setBackgroundColor) {
+                    map.setBackgroundColor(0x000000);
+                }
+            } else if (bgType === "image") {
+                map.viewer.setBackground(bgValue, true);
+            } else if (bgType === "skybox") {
+                map.viewer.setBackground(bgValue);
+            } else {
+                // 颜色背景
+                let colorValue;
+                if (bgValue.startsWith('#')) {
+                    colorValue = parseInt(bgValue.substring(1), 16);
+                } else {
+                    if (map.viewer && map.viewer.setBackground) {
+                        map.viewer.setBackground(bgValue);
+                        return;
+                    }
+                    colorValue = bgValue;
+                }
+                
+                if (map.setBackgroundColor) {
+                    map.setBackgroundColor(colorValue);
+                }
+            }
+        }
+
+        // 背景切换控制逻辑
+        const backgroundButtons = document.querySelectorAll(
+            ".control-panel button"
+        );
+        backgroundButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const bgValue = button.dataset.bg;
+                const bgType = button.dataset.type;
+
+                // 移除所有按钮的活跃状态
+                backgroundButtons.forEach(
+                    (btn) => btn.classList.remove("active")
+                );
+                // 标记当前点击的按钮为活跃
+                button.classList.add("active");
+
+                // 设置背景
+                setBackground(bgValue, bgType);
+            });
+        });
+
+        // 设置初始背景
+        map.viewer.setBackground("./data/skyBox/SunnySky/");
+
+        // 标记初始背景按钮为活跃
+        document.querySelector('[data-bg="./data/skyBox/SunnySky/"]').classList.add("active");
+
+        // 创建并添加高德地图作为基础
+        function addGaodeMap() {
+            const gaodeMap = new triLab.layer.GaodeWaterLayer({
+                minLevel: 2,
+                maxLevel: 18
+            });
+            map.addLayer(gaodeMap);
+            currentLayer = gaodeMap;
+        }
+
+        // 初始化高德地图
+        addGaodeMap();
+    </script>
+</body>
+</html>

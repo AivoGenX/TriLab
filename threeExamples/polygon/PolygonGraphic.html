@@ -1,0 +1,316 @@
+<!--
+ * 文件名称：PolygonGraphicGUI.html
+ * 功能说明：PolygonGraphic GUI 控制示例
+ * 技术栈：HTML5 + CSS3 + JavaScript (ES6 Modules)
+ * 依赖库：triLab.js、three.module.js、dat.gui.min.js
+ * 主要功能：
+ *   1. 创建GraphicLayer图形图层
+ *   2. 在图层上添加多个PolygonGraphic面图形
+ *   3. 使用GUI控制面的颜色、透明度、边框样式
+ * 创建日期：2024-01-10
+ * 最后修改：2026-01-19
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PolygonGraphic GUI 控制示例</title>
+    <style>
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .info-panel {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        max-width: 300px;
+      }
+
+      .info-panel h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+
+      .info-panel p {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <div class="info-panel">
+      <h3>PolygonGraphic GUI 控制示例</h3>
+      <p>使用右侧GUI控制面的样式</p>
+      <p id="click-info">点击面图形查看信息...</p>
+    </div>
+
+    <script src="./js/dat.gui.min.js"></script>
+    <script type="module">
+      // 导入所需模块（使用命名空间方式）
+      import triLab from "./TriLab.js";
+      import * as THREE from "./three.module.js";
+
+      const map = new triLab.Map("app");
+
+      const graphicLayer = new triLab.layer.GraphicLayer({
+        id: "graphic-layer-001",
+        name: "面图形图层",
+        visible: true,
+        opacity: 1.0,
+        enablePick: true,
+        clickRadius: 10,
+      });
+
+      map.addLayer(graphicLayer);
+
+      const polygons = [
+        {
+          id: "polygon-001",
+          code: "polygon-001",
+          name: "面1（红色）",
+          coordinates: [
+            [-5, -2, 0],
+            [-2, 2, 0],
+            [1, -1, 0],
+            [4, 3, 0],
+          ],
+          symbol: {
+            type: "polygon",
+            color: "#ff0000",
+            opacity: 1.0,
+            isborder: false,
+          },
+        },
+        {
+          id: "polygon-002",
+          code: "polygon-002",
+          name: "面2（绿色）",
+          coordinates: [
+            [-3, 3, 2],
+            [0, 0, 2],
+            [3, 3, 2],
+          ],
+          symbol: {
+            type: "polygon",
+            color: "#00ff00",
+            opacity: 0.8,
+            isborder: false,
+          },
+        },
+        {
+          id: "polygon-003",
+          code: "polygon-003",
+          name: "面3（蓝色带边框）",
+          coordinates: [
+            [-4, -3, 4],
+            [0, 0, 4],
+            [4, -3, 4],
+          ],
+          symbol: {
+            type: "polygon",
+            color: "#0000ff",
+            opacity: 1.0,
+            isborder: true,
+            borderColor: "#ffffff",
+            borderWidth: 2,
+          },
+        },
+        {
+          id: "polygon-004",
+          code: "polygon-004",
+          name: "面4（紫色宽边框）",
+          coordinates: [
+            [2, -4, 6],
+            [5, -1, 6],
+            [2, 2, 6],
+          ],
+          symbol: {
+            type: "polygon",
+            color: "#ff00ff",
+            opacity: 0.6,
+            isborder: true,
+            borderColor: "#ffff00",
+            borderWidth: 4,
+          },
+        },
+      ];
+
+      polygons.forEach((polygonData) => {
+        const polygon = new triLab.graphic.PolygonGraphic(polygonData);
+        console.log("创建面:", polygon.code, "id:", polygon.id);
+        graphicLayer.addGraphic(polygon);
+      });
+
+      console.log(
+        "图层中所有图形:",
+        graphicLayer.graphics.map((g) => ({ id: g.id, code: g.code }))
+      );
+
+      const polygon001 = graphicLayer.getGraphic("polygon-001");
+      const polygon002 = graphicLayer.getGraphic("polygon-002");
+      const polygon003 = graphicLayer.getGraphic("polygon-003");
+      const polygon004 = graphicLayer.getGraphic("polygon-004");
+
+      console.log("polygon001:", polygon001);
+      console.log("polygon002:", polygon002);
+      console.log("polygon003:", polygon003);
+      console.log("polygon004:", polygon004);
+
+      const initGUI = () => {
+        const gui = new dat.GUI();
+
+        const folder1 = gui.addFolder("面1（红色）");
+        folder1
+          .addColor({ 颜色: polygon001.getSymbol().color }, "颜色")
+          .onChange((val) => {
+            polygon001.setColor(val);
+          });
+        folder1
+          .add({ 透明度: polygon001.getSymbol().opacity }, "透明度", 0, 1)
+          .onChange((val) => {
+            polygon001.setSymbol({ opacity: val });
+            if (polygon001._mesh && polygon001._mesh.material) {
+              polygon001._mesh.material.opacity = val;
+              polygon001._mesh.material.transparent = val < 1.0;
+              polygon001._mesh.material.needsUpdate = true;
+            }
+          });
+        folder1.open();
+
+        const folder2 = gui.addFolder("面2（绿色）");
+        folder2
+          .addColor({ 颜色: polygon002.getSymbol().color }, "颜色")
+          .onChange((val) => {
+            polygon002.setColor(val);
+          });
+        folder2
+          .add({ 透明度: polygon002.getSymbol().opacity }, "透明度", 0, 1)
+          .onChange((val) => {
+            polygon002.setSymbol({ opacity: val });
+            if (polygon002._mesh && polygon002._mesh.material) {
+              polygon002._mesh.material.opacity = val;
+              polygon002._mesh.material.transparent = val < 1.0;
+              polygon002._mesh.material.needsUpdate = true;
+            }
+          });
+        folder2.open();
+
+        const folder3 = gui.addFolder("面3（蓝色带边框）");
+        folder3
+          .addColor({ 颜色: polygon003.getSymbol().color }, "颜色")
+          .onChange((val) => {
+            polygon003.setColor(val);
+          });
+        folder3
+          .add({ 透明度: polygon003.getSymbol().opacity }, "透明度", 0, 1)
+          .onChange((val) => {
+            polygon003.setSymbol({ opacity: val });
+            if (polygon003._mesh && polygon003._mesh.material) {
+              polygon003._mesh.material.opacity = val;
+              polygon003._mesh.material.transparent = val < 1.0;
+              polygon003._mesh.material.needsUpdate = true;
+            }
+          });
+        folder3
+          .addColor({ 边框颜色: polygon003.getSymbol().borderColor }, "边框颜色")
+          .onChange((val) => {
+            polygon003.setSymbol({ borderColor: val });
+            if (polygon003._line && polygon003._line.material) {
+              polygon003._line.material.color.set(val);
+            }
+          });
+        folder3
+          .add({ 边框宽度: polygon003.getSymbol().borderWidth }, "边框宽度", 1, 10)
+          .onChange((val) => {
+            polygon003.setBorderWidth(val);
+          });
+        folder3.open();
+
+        const folder4 = gui.addFolder("面4（紫色宽边框）");
+        folder4
+          .addColor({ 颜色: polygon004.getSymbol().color }, "颜色")
+          .onChange((val) => {
+            polygon004.setColor(val);
+          });
+        folder4
+          .add({ 透明度: polygon004.getSymbol().opacity }, "透明度", 0, 1)
+          .onChange((val) => {
+            polygon004.setSymbol({ opacity: val });
+            if (polygon004._mesh && polygon004._mesh.material) {
+              polygon004._mesh.material.opacity = val;
+              polygon004._mesh.material.transparent = val < 1.0;
+              polygon004._mesh.material.needsUpdate = true;
+            }
+          });
+        folder4
+          .addColor({ 边框颜色: polygon004.getSymbol().borderColor }, "边框颜色")
+          .onChange((val) => {
+            polygon004.setSymbol({ borderColor: val });
+            if (polygon004._line && polygon004._line.material) {
+              polygon004._line.material.color.set(val);
+            }
+          });
+        folder4
+          .add({ 边框宽度: polygon004.getSymbol().borderWidth }, "边框宽度", 1, 10)
+          .onChange((val) => {
+            polygon004.setBorderWidth(val);
+          });
+        folder4.open();
+      };
+
+      initGUI();
+
+      graphicLayer.on("click", (e) => {
+        const graphic = e.graphic;
+        const position = graphic.position;
+        const symbol = graphic.getSymbol();
+        document.getElementById("click-info").innerHTML =
+          "点击了: " +
+          graphic.code +
+          "<br>" +
+          "名称: " +
+          graphic.name +
+          "<br>" +
+          "位置: (" +
+          position.x.toFixed(2) +
+          ", " +
+          position.y.toFixed(2) +
+          ", " +
+          position.z.toFixed(2) +
+          ")<br>" +
+          "颜色: " +
+          symbol.color +
+          "<br>" +
+          "透明度: " +
+          symbol.opacity +
+          "<br>" +
+          "边框: " +
+          (symbol.isborder ? "是" : "否") +
+          "<br>" +
+          "边框颜色: " +
+          (symbol.borderColor || "无") +
+          "<br>" +
+          "边框宽度: " +
+          (symbol.borderWidth || "无");
+      });
+
+      map.setCenter([0, 0, 5]);
+    </script>
+  </body>
+</html>

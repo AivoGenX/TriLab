@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>高德水效果地图样式示例</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        font-family: Arial, sans-serif;
+      }
+      #map-container {
+        flex: 1;
+        position: relative;
+      }
+      #controls {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+      #controls h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 16px;
+      }
+      #controls button {
+        display: block;
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        width: 100%;
+        text-align: left;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      #controls button:hover {
+        background: #f5f5f5;
+      }
+      #controls button.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map-container">
+      <div id="controls">
+        <h3>高德地图样式</h3>
+        <button id="btn-water" class="active">水效果地图</button>
+        <button id="btn-gray">灰色地图</button>
+      </div>
+    </div>
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "./THREE.module.js";
+
+      // 地图中心点（UTM 坐标）
+      let center = [2938834.56 + 100000, 4851421.1815];
+      // 初始化 TriLab
+      const map = new triLab.Map("map-container", {
+        center: center,
+        zoom: 19,
+        yaw: -125,
+        pitch: 77,
+        autoRotate: false,
+      });
+      window.map = map;
+      let currentLayer = null;
+
+      // 移除当前图层
+      function removeCurrentLayer() {
+        if (currentLayer) {
+          map.removeLayer(currentLayer);
+          currentLayer = null;
+        }
+      }
+
+      // 创建并添加水效果地图
+      function addWaterMap() {
+        removeCurrentLayer();
+        const waterMap = new triLab.layer.GaodeWaterLayer({
+          minLevel: 2,
+          maxLevel: 18,
+        });
+        map.addLayer(waterMap);
+        currentLayer = waterMap;
+
+        // 更新按钮状态
+        document.getElementById("btn-water").classList.add("active");
+        document.getElementById("btn-gray").classList.remove("active");
+      }
+
+      // 创建并添加灰色地图
+      function addGrayMap() {
+        removeCurrentLayer();
+        const grayMap = new triLab.layer.GaodeGrayLayer({
+          minLevel: 2,
+          maxLevel: 18,
+        });
+        map.addLayer(grayMap);
+        currentLayer = grayMap;
+
+        // 更新按钮状态
+        document.getElementById("btn-water").classList.remove("active");
+        document.getElementById("btn-gray").classList.add("active");
+      }
+
+      // 初始化水效果地图
+      addWaterMap();
+
+      // 添加按钮点击事件
+      document
+        .getElementById("btn-water")
+        .addEventListener("click", addWaterMap);
+      document.getElementById("btn-gray").addEventListener("click", addGrayMap);
+
+      // 设置初始背景
+      //   map.viewer.setBackground("./data/skyBox/SunnySky/");
+    </script>
+  </body>
+</html>

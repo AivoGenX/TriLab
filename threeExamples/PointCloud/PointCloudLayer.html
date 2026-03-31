@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>点云加载</title>
+    <style>
+      html, body, #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "./three.module.js";
+
+      // 创建 TriLab 实例
+      const map = new triLab.Map("app");
+      
+      // 点云数据文件
+      const urls = [];
+      urls.push("./data/text.lab");
+
+      // 创建点云图层并添加到地图
+      const pointcloud = new triLab.layer.PointCloudLayer();
+      map.addLayer(pointcloud);
+
+      // 加载点云数据
+      pointcloud.addClouds(urls).then(() => {
+        // 自适应屏幕显示
+        map.fitToScreen();
+      });
+    </script>
+  </body>
+</html>

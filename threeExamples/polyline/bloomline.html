@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>辉光线</title>
+    <style type="text/css">
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map" style="width:100%;height: 100%"></div>
+</body>
+<script type="module">
+    import triLab from './TriLab.js';
+
+    let mapViewer = new triLab.Map('map', {
+        yaw: 0, pitch: 0, zoom: 9, autoRotate: false,
+        center: [12958323.435172467, 4893472.508009557, 0]
+    });
+    
+    const gaodeLayer = new triLab.layer.GaodeBlackLayer({
+      style: "8",
+      minLevel: 2,
+      maxLevel: 18
+    });
+    mapViewer.addLayer(gaodeLayer);
+    
+    fetch("./data/line/line.geojson").then((res) => {
+        return res.json();
+    }).then((resData) => {
+        let features = resData.features || [];
+        let fs = triLab.utils.GeometryUtil.LonLatToUtmFeatures(features,0);
+        let line = new triLab.layer.PolylineLayer(fs, {
+            width: 2,
+            color: '#ffff00',
+            dashSize: 1000,
+            gapSize: 1000,
+            bloom: true
+        });
+        line.position.z=175;
+        mapViewer.add(line);
+    })
+</script>
+
+</html>

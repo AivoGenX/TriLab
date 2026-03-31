@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TriLab 高德影像模拟球体示例</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="info">TriLab 高德影像球体示例<br />卫星影像 + 球体效果</div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./THREE.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "three";
+
+      // 初始化 TriLab
+      const center = [2938834.56, 4851421.1815];
+      // 初始化 TriLab
+      const map = new triLab.Map("app", {
+        center: center,
+        zoom: 2.5,
+        autoRotate: false,
+        effects: {
+          cloudVolume: false,
+          godRays: false,
+        },
+      });
+      // 创建 GaodeSatelliteLayer 实例（卫星影像）
+      const satelliteLayer = new triLab.layer.GaodeSatelliteLayer({
+        minLevel: 2,
+        maxLevel: 18,
+      });
+      map.addLayer(satelliteLayer);
+
+      // 添加道路图层
+      const roadLayer = new triLab.layer.GaodeRoadLayer({
+        minLevel: 2,
+        maxLevel: 18,
+      });
+      map.addLayer(roadLayer);
+
+      // 添加 earthMask 地球过滤效果（参考 MapBoxTerrainLayer）
+      const earthMask = new triLab.plug.EarthMask(satelliteLayer);
+      map.add(earthMask);
+      console.log("已添加 earthMask 地球过滤效果");
+
+      // ==================== 球体设置 ====================
+      // 创建球体几何体
+      const sphereGeometry = new THREE.SphereGeometry(50000, 32, 32); // 半径50km的球体
+
+      // 创建球体材质
+      const sphereMaterial = new THREE.MeshStandardMaterial({
+        color: 0xff6600, // 橙色
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide,
+        emissive: 0xff2200,
+        emissiveIntensity: 0.3,
+      });
+
+      // 创建球体网格
+      const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+
+      // ==================== UTM 坐标设置 ====================
+      // 设置球体的 UTM 坐标
+      const spherePosition = {
+        x: 2938834.56, // UTM X 坐标
+        y: 4851421.1815, // UTM Y 坐标
+        z: 50000, // 高度
+      };
+      sphere.position.set(spherePosition.x, spherePosition.y, spherePosition.z);
+      console.log("球体设置位置:", sphere.position);
+
+      // 添加球体到场景
+      map.add(sphere);
+
+      // 添加环境光
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      map.scene.add(ambientLight);
+
+      // 添加方向光
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(1, 1, 1);
+      map.scene.add(directionalLight);
+
+      console.log("TriLab 高德影像球体示例已加载");
+    </script>
+  </body>
+</html>

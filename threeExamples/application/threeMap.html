@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, user-scalable=no, width=device-width"
+    />
+    <title>北京地图一张图</title>
+    <style type="text/css">
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map" style="width: 100%; height: 100%"></div>
+  </body>
+  <script type="module">
+    import triLab from "./TriLab.js";
+    import * as THREE from "./three.module.js";
+    
+    // 初始化 TriLab
+    let map = new triLab.Map("map", {
+      center: [2938834.56, 4851421.1815],
+      zoom: 16,
+      yaw: 0,
+      pitch: 10,
+    });
+
+    // 创建 GaodeLayer 实例
+    const gaodeLayer = new triLab.layer.GaodeLayer({
+      style: "8", // 高德地图样式，8为默认样式
+      minLevel: 2,
+      maxLevel: 18,
+      backgroundColor: 0x112233,
+    });
+    map.addLayer(gaodeLayer);
+ 
+
+    // 压缩模型
+    let model = new triLab.graphic.AnimationModel({
+      scale: [1, 1, 1],
+      url: "./data/Model/LittlestTokyo.glb",
+      dracoDecoderPath: "./js/three/draco/", // 设置draco解码器路径
+    });
+    // model.dracoDecoderPath="./js/three/draco/"; // 设置draco解码器路径
+    // model.position.z=20;
+    model.position.set(2938834.56, 4851421.1815, 380);
+    
+    // 创建图形图层并添加模型
+    const graphicLayer = new triLab.layer.GraphicLayer();
+    map.addLayer(graphicLayer);
+    graphicLayer.addGraphic(model);
+
+    // // 添加 three 立方体
+    let geometry = new THREE.BoxGeometry(500, 500, 500);
+    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    let cube = new THREE.Mesh(geometry, material);  
+    cube.position.set(2938834.56+1000, 4851421.1815, 500);
+    map.add(cube);
+  </script>
+</html>

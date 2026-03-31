@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- 设置字符编码为 UTF-8 -->
+    <meta charset="UTF-8" />
+    <!-- 确保页面在 IE 浏览器中以最高版本的渲染模式显示 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- 设置页面在不同设备上的响应式布局，宽度根据设备宽度自适应，初始缩放比例为 1 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 设置页面标题 -->
+    <title>cesium和引擎融合场景展示</title>
+
+    <style>
+      /* 将 HTML、body 和 id 为 cesiumContainer 的元素的宽度和高度都设置为 100%，并且去除外边距和内边距，同时隐藏溢出内容 */
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      /* 隐藏 Cesium 查看器中的版权信息 */
+      .cesium-viewer .cesium-widget-credits {
+        display: none;
+      }
+      /* 设置 id 为 ThreeContainer 的元素的宽度和高度为 100% */
+      #ThreeContainer {
+        width: 100%;
+        height: 100%;
+      }
+      /* 设置 id 为 ThreeContainer 下的 canvas 元素的指针事件为无，使其不响应鼠标事件，并绝对定位到顶部 */
+      #ThreeContainer canvas {
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+      }
+      /* 相机操作按钮区域样式：绝对定位在页面左上角，层级为 999，文字颜色为白色 */
+      .camera {
+        position: absolute;
+        z-index: 999;
+        top: 0;
+        left: 0;
+        color: #fff;
+      }
+      /* 描述文字样式：字体大小为 14px，文字颜色为白色 */
+      .em-desc {
+        font-size: 14px;
+        color: #fff;
+      }
+    </style>
+    <!-- 引入 proj4 库，用于坐标转换 -->
+    <script src="./js/proj4/proj4.js"></script>
+    <!-- 引入 Cesium 库，用于创建三维地理信息系统场景 -->
+    <script src="./js/Cesium/Cesium.js"></script>
+    <!-- 引入自定义的样式文件 -->
+    <link rel="stylesheet" type="text/css" href="./css/TriLab.css" />
+    <!-- 引入 Cesium 库的小部件样式文件 -->
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="./js/Cesium/Widgets/widgets.css"
+    />
+  </head>
+
+  <body>
+    <div>
+      <!-- 相机操作按钮和坐标信息显示区域 -->
+      <div class="camera">
+        <!-- 通过经纬度获取度带按钮 -->
+        <button id="cameraPlay">通过经纬度获取度带</button>
+        <!-- 坐标信息显示文本 -->
+        <text class=".em-desc" id="myText">坐标信息</text>
+      </div>
+      <!-- 渲染区域 -->
+      <div id="render_area" class="render_area">
+        <!-- Cesium 容器，用于渲染三维地理信息系统场景 -->
+        <div id="cesiumContainer" class="cesiumContainer"></div>
+      </div>
+    </div>
+    <script type="module">
+      // 从 TriLab.js 文件中导入 TriLab、cesiumThree、Point、Utils 和 Model 模块
+      // TriLab 用于创建地图实例
+      // cesiumThree 用于集成 Cesium 和 Three.js
+      // Point 用于创建点对象
+      // Utils 包含一些工具函数，如坐标转换等
+      // Model 用于加载和管理人工模型
+      import triLab from "../TriLab.js";
+      // 导入 Three.js 库，用于处理三维图形相关操作
+      import * as THREE from "../three.module.js";
+
+      // 创建一个 TriLab 实例，将地图挂载到 id 为 render_area 的 DOM 元素上
+      let map = new triLab.Map("render_area");
+
+      // 获取地图的查看器实例
+      let viewer = map.viewer;
+      // 创建一个 cesiumThree 实例，用于集成 Cesium 和 Three.js
+      let ct = new triLab.cesiumThree({
+        // 指定渲染器为地图查看器的渲染器
+        renderer: viewer.renderer,
+        // 指定查看器为地图的查看器
+        viewer: map.viewer,
+        // 指定度带为 51
+        zone: 51,
+      });
+      // 获取 cesiumThree 实例中的 Cesium 查看器
+      let cesiumViewer = ct.cesiumViewer;
+
+      const imageryLayers = cesiumViewer.imageryLayers;
+      const baseLayer = imageryLayers.get(imageryLayers.length - 1);
+      // 降低亮度使整体偏暗（接近黑色）
+      baseLayer.brightness = 0.3;
+      // 提高对比度增强明暗区分
+      baseLayer.contrast = 1.8;
+      // 降低伽马值加深暗部
+      baseLayer.gamma = 0.6;
+      // 消除色调影响（灰度化核心）
+      baseLayer.hue = 0;
+      // 完全去饱和（转为灰度）
+      baseLayer.saturation = 0.3;
+      // 叠加地形阴影（若加载了地形数据）
+      if (cesiumViewer.scene.terrainProvider) {
+        cesiumViewer.scene.globe.enableLighting = true; // 开启全局光照
+        cesiumViewer.scene.light.direction = new Cesium.Cartesian3(
+          -0.5,
+          -0.5,
+          -1.0
+        ); // 调整光源方向，强化阴影
+      }
+
+      // 获取地图查看器的场景实例
+      let scene = viewer.scene;
+      // 设置场景的视角，第一个参数为相机位置，第二个参数为目标位置
+      // scene.view.setView(
+      //   [238455.91154967382, 3493571.387893581, 1.0988607188972959],
+      //   [238455.91154967382, 3493571.387893581, -0.01282012150134059]
+      // );
+
+      // 1. 定义要添加的偏移值（x加238455.91154967382，y加3493571.387893581）
+      const xOffset = 238455.91154967382;
+      const yOffset = 3493571.387893581;
+      // 2. 原 position 向量（添加偏移前）
+      const originalPosition = new THREE.Vector3(
+        0.18516750948474134,
+        -2.6930158091447356,
+        1.0988607188972959
+      );
+
+      // 3. 原 target 向量（添加偏移前）
+      const originalTarget = new THREE.Vector3(
+        0.15621691426020695,
+        -0.7054506998843644,
+        -0.01282012150134059
+      );
+
+      // 4. 计算添加偏移后的新向量（x/y分别加偏移，z不变）
+      const newPosition = new THREE.Vector3(
+        originalPosition.x + xOffset,
+        originalPosition.y + yOffset,
+        originalPosition.z // z分量不变
+      );
+
+      const newTarget = new THREE.Vector3(
+        originalTarget.x + xOffset,
+        originalTarget.y + yOffset,
+        originalTarget.z // z分量不变
+      );
+
+      map.flyTo(newPosition, newTarget, 1);
+
+      // 经纬度转换为 UTM 坐标
+      // 将给定的经纬度 [120.24496040415005, 31.547487160066296, 50] 转换为 UTM 坐标
+      let xyz = triLab.Utils.wgs84ToUTM([120.24496040415005, 31.547487160066296, 50]);
+      // 打印转换后的 UTM 坐标的 x 和 y 值
+      console.info(xyz.x, xyz.y);
+
+      // 定义点对象的参数
+      let params = {
+        // 点对象的名称
+        name: "我是一个点",
+        // 点对象的坐标，使用转换后的 UTM 坐标
+        coordinates: xyz,
+        // 点对象的样式配置
+        style: {
+          // 点的颜色
+          color: "#ff0000",
+          // 点的大小
+          size: 20,
+          // 点的透明度
+          opacity: 10,
+          // 点的大小是否跟随相机距离变化
+          sizeAttenuation: true,
+          // 点的图标 URL
+          url: "./data/imgs/camera.png",
+        },
+      };
+      // 创建一个点对象实例
+      let point = new triLab.graphic.Point(params);
+      // 将点对象添加到地图中
+      map.add(point);
+
+      // 在 Cesium 查看器中添加一个点实体
+      cesiumViewer.entities.add({
+        // 点实体的名称
+        name: "点几何对象",
+        // 点实体的位置，使用经纬度和高度创建笛卡尔坐标
+        position: Cesium.Cartesian3.fromDegrees(
+          120.24496040415005,
+          31.547487160066296,
+          150
+        ),
+        // 点实体的样式配置
+        point: {
+          // 点的颜色
+          color: Cesium.Color.SKYBLUE,
+          // 点的像素大小
+          pixelSize: 10,
+          // 点的轮廓颜色
+          outlineColor: Cesium.Color.YELLOW,
+          // 点的轮廓宽度
+          outlineWidth: 3,
+          // 禁用深度测试的距离
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          // 高度参考模式，这里设置为贴地
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        },
+      });
+
+      // 监听地图的鼠标移动事件
+      map.onMouseMove = ({ point }) => {
+        // 获取显示坐标信息的文本元素
+        let textElement = document.getElementById("myText");
+        // 更新文本元素的内容，显示鼠标当前位置的坐标信息
+        textElement.textContent =
+          "x=" + point.x + "y=" + point.y + "z=" + point.z;
+      };
+
+      // 获取通过经纬度获取度带按钮元素
+      let cameraPlay = document.getElementById("cameraPlay");
+      // 为按钮添加点击事件监听器
+      cameraPlay.addEventListener("click", function () {
+        // 通过经纬度获取所在度带
+        let zone = triLab.Utils.getZoneFromLonLat(
+          120.24496040415005,
+          31.547487160066296
+        );
+        // 弹出对话框显示获取到的度带信息
+        alert(zone);
+      });
+
+      // // 创建一个模型实例，指定要加载的模型文件的 URL
+      let model = new triLab.model.Model({
+        url: "../data/Model/glTF/DamagedHelmet.gltf",
+      });
+      // 设置模型的位置，使用转换后的 UTM 坐标的 x 和 y 值，高度为 0
+      model.position.set(xyz.x, xyz.y, 0);
+      // 将模型添加到地图中
+      map.addModel(model);
+
+      // 调用封装的HDR加载方法
+      triLab.utils.HDRLoader.loadEnvironment(map.scene, {
+        url: "../data/imgs/textures/royal_esplanade_1k.hdr",
+        onProgress: (percent) => {
+          console.log(`环境加载进度: ${percent}%`);
+        },
+        onLoad: (texture) => {
+          console.log("HDR环境贴图加载完成");
+        },
+        onError: (error) => {
+          console.error("自定义错误处理:", error);
+        },
+      });
+
+      // 扫光效果配置
+      const texturePaths = [
+        "./data/imgs/textures/geometry3.png",
+        "./data/imgs/textures/geometry1.png",
+      ];
+
+      const configs = [
+        {
+          innerCircleWidth: 5,
+          circleWidth: 6,
+          circleMax: 10,
+          opacityScale: 1.0, // 完全不透明，颜色更实
+          reverseOpacity: false,
+          circleSpeed: 0.02,
+          diff: "#ff3333", // 亮红色（高饱和，视觉冲击强）
+          color3: "#ff6666", // 稍浅的红色，形成层次感
+          center: [0, 0, 0],
+          intensity: 40.0, // 进一步提升发光强度
+          isDisCard: true,
+          positionZ: 0.2,
+        },
+        {
+          innerCircleWidth: 3,
+          circleWidth: 2,
+          circleMax: 8,
+          opacityScale: 1.0,
+          reverseOpacity: true, // 外层更亮，增强扩散感
+          circleSpeed: 0.01,
+          diff: "#3366ff", // 亮蓝色（与红色形成强烈对比）
+          color3: "#6699ff", // 稍浅的蓝色，层次更明显
+          center: [0, 0, 0],
+          intensity: 30.0,
+          isDisCard: true,
+          positionZ: 0.1,
+        },
+      ];
+
+      let sweepEffect = new triLab.effect.SweepEffect(texturePaths, configs);
+      sweepEffect.position.set(xyz.x, xyz.y, 0.1);
+      map.scene.addAnimate(sweepEffect);
+    </script>
+  </body>
+</html>

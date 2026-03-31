@@ -1,0 +1,315 @@
+html,
+body,
+#app,
+.app-container,
+.TriLab-container {
+    height: 100%;
+    width: 100%;
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    position: relative;
+    background-color: rgba(81, 105, 154, 0.8); /* 浅蓝色背景 */
+}
+
+.cesium-widget-credits {
+    display: none !important;
+    visibility: hide !important;
+}
+
+/* 按钮样式 */
+.trilab_button {
+    outline: none;
+    border: 0;
+    cursor: pointer;
+    min-width: 110px;
+    min-height: 40px;
+    box-sizing: border-box;
+    border: 1px solid rgba(81, 105, 154, 0.8); /* 浅蓝色边框 */
+    background: linear-gradient(0deg, rgba(81, 105, 154, 0.8), rgba(81, 105, 154, 1)); /* 浅蓝色渐变背景 */
+    box-shadow: inset 0 0 0 1px rgba(81, 105, 154, 1), 0 2px 21px 0 rgba(33, 34, 39, 0.55);
+    opacity: .96;
+    border-radius: 2px;
+    color: #ffffff;
+    display: block;
+  
+    padding: 10px 20px;
+}
+
+ 
+
+.trilab_button:hover {
+    background: rgba(81, 105, 154, 1);
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    box-shadow: inset 0 0 0 1px rgba(81, 105, 154, 1), 0 2px 21px 0 rgba(33, 34, 39, 0.55);
+    color: #ffffff;
+}
+
+.trilab_button-inline-block {
+    display: inline-block;
+}
+
+.trilab-input {
+    word-break: break-all;
+    background: rgba(81, 105, 154, 0.8);
+    color: white;
+    margin: 6px 0;
+    height: 28px;
+    line-height: 28px;
+    min-width: 116px;
+    padding: 0px 7px;
+    outline: none;
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    box-shadow: inset 0 0 0 1px rgba(81, 105, 154, 1), 0 2px 21px 0 rgba(33, 34, 39, 0.55);
+}
+
+/* 面板 */
+.trilab_panel {
+    position: absolute;
+    opacity: 0.9;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.trilab_left_panel {
+    left: 10px;
+    top: 10px;
+}
+
+.trilab-right-panel {
+    right: 10px;
+    top: 10px;
+    height: 100%;
+}
+
+.trilab_panel_header {
+    height: 38px;
+    background: linear-gradient(0deg, rgba(81, 105, 154, 0.8) 0%, rgba(81, 105, 154, 1) 100%); /* 浅蓝色渐变背景 */
+    border-radius: 4px 4px 0px 0px;
+    position: relative;
+    font-size: 14px;
+    font-family: 'MicrosoftYaHei';
+    font-weight: 400;
+    color: #dcdcdc;
+    line-height: 38px;
+    min-width: 200px;
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    pointer-events: all;
+}
+
+.trilab_panel_title {
+    padding-left: 10px;
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    font-size: 16px;
+}
+
+.trilab_panel_body {
+    margin: 0;
+    box-sizing: border-box;
+    font-size: 14px;
+    background: linear-gradient(0deg, rgba(81, 105, 154, 0.8) 0%, rgba(81, 105, 154, 1) 100%); /* 浅蓝色渐变背景 */
+    border-left: 1px solid rgba(81, 105, 154, 0.8);
+    border-right: 1px solid rgba(81, 105, 154, 0.8);
+    box-shadow: 0px 2px 21px 0px rgba(33, 34, 39, 0.55);
+    max-height: calc(100% - 100px);
+    overflow: auto;
+    pointer-events: all;
+}
+
+.trilab_form_wrapp {
+    padding: 0px;
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    border-bottom: 0;
+}
+
+.trilab_form_item {
+    display: flex;
+    margin: 7px 0px;
+    padding: 7px 20px;
+    align-items: center;
+    border-bottom: 1px solid #8181816b;
+    color: #ffffffc9;
+    width: 100%;
+    box-sizing: border-box;
+}
+ 
+.trilab_form_item label {
+    text-wrap: nowrap;
+}
+
+.trilab_form_item-label {
+    color: #ffffffc9;
+    padding-left: 10px;
+}
+
+.trilab-form-group-label {
+    padding-left: 2px;
+    color: rgba(255, 255, 255, 0.816);
+    background: rgba(81, 105, 154, 0.8);
+    line-height: 30px;
+}
+
+.trilab-form-cell {
+    display: flex; 
+    align-items: center;
+}
+
+.trilab-form-cell:not(:first-child) {
+    margin-left: 10px;
+}
+
+.trilab-form-footer {
+    text-align: center;
+    padding: 10px 5px;
+}
+
+.trilab_panel-footer {
+    background: linear-gradient(0deg, rgba(81, 105, 154, 0.8) 0%, rgba(81, 105, 154, 1) 100%); /* 浅蓝色渐变背景 */ 
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    border-top: 0;
+    border-radius: 0px 0px 4px 4px;
+}
+
+.trilab_panel-tail {
+    height: 22px;
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    border-top: 0;
+    border-radius: 0px 0px 4px 4px;
+}
+
+/* 覆盖element plus */
+.el-input-number.is-controls-right .el-input__wrapper {
+    background: rgba(81, 105, 154, 0.8);
+    color: white;
+    border-radius: 2px;
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    box-shadow: inset 0 0 0 1px rgba(81, 105, 154, 1), 0 2px 21px 0 rgba(33, 34, 39, 0.55);
+    height: 24px;
+}
+
+.el-input--small .el-input__inner {
+    color: white;
+}
+
+.el-input-number__increase {
+    border-left: 1px solid #7f8982;
+    background: rgba(81, 105, 154, 0.8);
+    color: #ffffff;
+}
+
+.el-input-number.is-controls-right .el-input-number__decrease {
+    border-left: 1px solid #7f8982;
+    background: rgba(81, 105, 154, 0.8);
+    color: #ffffff;
+}
+
+.el-color-picker__trigger {
+    border: none;
+}
+
+.el-color-dropdown__value .el-input__inner {
+    color: black !important;
+}
+
+.el-checkbox {
+    color: #d7d7d7;
+}
+
+.el-checkbox__inner {
+    border: 1px solid rgba(81, 105, 154, 0.8);
+    box-shadow: inset 0 0 0 1px rgba(81, 105, 154, 1), 0 2px 21px 0 rgba(33, 34, 39, 0.55);
+    background-color: rgba(81, 105, 154, 0.8);
+    color: #c0c1c3;
+}
+
+.el-checkbox.el-checkbox--large .el-checkbox__inner {
+    width: 20px;
+    height: 20px;
+}
+
+.el-checkbox__input.is-checked .el-checkbox__inner {
+    background-color: rgba(81, 105, 154, 1);
+    border-color: rgba(81, 105, 154, 0.8);
+}
+
+.el-checkbox__inner::after {
+    height: 7px;
+    left: 6px;
+    top: 3px;
+    width: 4px;
+}
+
+.el-slider--small {
+    margin-left: 10px;
+    min-width: 126
+} 
+
+/* 设置HTML、body和id为app的元素宽度和高度为100%，并去除外边距和内边距 */
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+/* 工具条样式 */
+.draw_tool {
+    position: absolute;
+    z-index: 999;
+    top: 50px;
+    left: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.draw_tool_item {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4285f4;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.draw_tool_item:hover {
+    background-color: #3367d6;
+    transform: translateY(-2px);
+}
+
+.draw_tool_item:active {
+    transform: scale(0.98);
+}
+
+.draw_tool_item.info-btn {
+    background-color: #34a853;
+}
+
+.draw_tool_item.clear-btn {
+    background-color: #ea4335;
+}
+
+      /* 响应式调整 */
+      @media (max-width: 640px) {
+        .draw_tool {
+          top: 10px;
+          left: 10px;
+          padding: 10px;
+        }
+        
+        .draw_tool_item {
+          padding: 8px 12px;
+          font-size: 13px;
+        }
+      }

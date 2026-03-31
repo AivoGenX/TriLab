@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高德地图样式示例</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        #map-container {
+            flex: 1;
+            position: relative;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        #controls h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        #controls button {
+            display: block;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            width: 100%;
+            text-align: left;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #controls button:hover {
+            background: #f5f5f5;
+        }
+        #controls button.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div id="map-container">
+        <div id="controls">
+            <h3>高德地图样式</h3>
+            <button id="btn-normal" class="active">默认地图</button>
+            <button id="btn-blue">蓝色地图</button> 
+            <button id="btn-gray">灰色地图</button>
+        </div>
+    </div>
+
+  <script type="importmap">
+      {
+        "imports": {
+          "three": "./THREE.module.js"
+        }
+      }
+    </script>
+
+  <script type="module">
+    import triLab from "./TriLab.js";
+    import * as THREE from "three";
+
+    // 地图中心点（UTM 坐标）
+    let center = [2938834.56, 4851421.1815];
+    // 初始化 TriLab
+    const map = new triLab.Map("map-container", {
+      center: center,
+      autoRotate: false,
+    });
+
+    // 存储所有地图图层
+    const mapLayers = {};
+    let currentLayer = null;
+    let isInitialized = false;
+
+    // 预创建所有地图图层（优化：避免切换时重新创建）
+    function initAllLayers() {
+      if (isInitialized) return;
+      
+      // 创建默认地图
+      mapLayers.normal = new triLab.layer.GaodeLayer({
+        style: "8",
+        minLevel: 2,
+        maxLevel: 18,
+        backgroundColor: 0x112233,
+      });
+      
+      // 创建蓝色地图
+      mapLayers.blue = new triLab.layer.GaodeBlueLayer({
+        minLevel: 2,
+        maxLevel: 18
+      });
+      
+      // 创建黑色地图
+      mapLayers.black = new triLab.layer.GaodeBlackLayer({
+        minLevel: 2,
+        maxLevel: 18
+      });
+      
+      // 创建灰色地图
+      mapLayers.gray = new triLab.layer.GaodeGrayLayer({
+        minLevel: 2,
+        maxLevel: 18
+      });
+      
+      isInitialized = true;
+    }
+
+    // 切换到指定地图（删除之前的地图，添加新地图）
+    function switchToLayer(layerName) {
+      // 删除当前图层
+      if (currentLayer && mapLayers[currentLayer]) {
+        map.removeLayer(mapLayers[currentLayer]);
+      }
+      
+      // 添加新图层
+      if (mapLayers[layerName]) {
+        map.addLayer(mapLayers[layerName]);
+        currentLayer = layerName;
+      }
+    }
+
+    // 创建并添加默认地图
+    function addDefaultMap() {
+      if (!isInitialized) {
+        initAllLayers();
+      }
+      switchToLayer('normal');
+      updateActiveButton('btn-normal');
+    }
+
+    // 创建并添加蓝色地图
+    function addBlueMap() {
+      if (!isInitialized) {
+        initAllLayers();
+      }
+      switchToLayer('blue');
+      updateActiveButton('btn-blue');
+    }
+
+    // 创建并添加黑色地图
+    function addBlackMap() {
+      if (!isInitialized) {
+        initAllLayers();
+      }
+      switchToLayer('black');
+      updateActiveButton('btn-black');
+    }
+
+    // 创建并添加灰色地图
+    function addGrayMap() {
+      if (!isInitialized) {
+        initAllLayers();
+      }
+      switchToLayer('gray');
+      updateActiveButton('btn-gray');
+    }
+
+    // 更新激活按钮
+    function updateActiveButton(btnId) {
+      const buttons = document.querySelectorAll('#controls button');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      document.getElementById(btnId).classList.add('active');
+    }
+
+    // 绑定按钮事件
+    document.getElementById('btn-normal').addEventListener('click', addDefaultMap);
+    document.getElementById('btn-blue').addEventListener('click', addBlueMap); 
+    document.getElementById('btn-gray').addEventListener('click', addGrayMap);
+
+    // 初始化默认地图
+    addDefaultMap();
+  </script>
+</body>
+</html>

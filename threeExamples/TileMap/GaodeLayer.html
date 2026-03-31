@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TriLab GaodeLayer 示例</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+    }
+
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <div id="info">TriLab GaodeLayer 示例</div>
+
+  <script type="importmap">
+      {
+        "imports": {
+          "three": "./three.module.js"
+        }
+      }
+    </script>
+
+  <script type="module">
+    import triLab from "./TriLab.js";
+    import * as THREE from "three";
+
+    // 地图中心点（UTM 坐标）
+    let center = [2938834.56, 4851421.1815];
+
+    // 初始化 TriLab
+    const map = new triLab.Map("app", {
+      center: center,
+      autoRotate: false,
+    });
+
+    // 创建 GaodeLayer 实例
+    const gaodeLayer = new triLab.layer.GaodeLayer({
+      style: "8", // 高德地图样式，8为默认样式
+      minLevel: 2,
+      maxLevel: 18,
+      backgroundColor: 0x112233,
+    });
+    map.addLayer(gaodeLayer);
+
+    console.log('TriLab GaodeLayer 示例已加载');
+  </script>
+</body>
+
+</html>

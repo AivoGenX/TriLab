@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TriLab 高德卫星地图图层示例</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "./THREE.module.js";
+      // 地图中心点（UTM 坐标）
+      let center = [2938834.56, 4851421.1815];
+      // 初始化 TriLab
+      const map = new triLab.Map("app", {
+        center: center,
+        autoRotate: false,
+      });
+
+      // 创建 GaodeSatelliteLayer 实例
+      // 创建并添加卫星图层
+      const tileMap = new triLab.layer.GaodeSatelliteLayer({
+        minLevel: 2,
+        maxLevel: 18, 
+      });
+      map.addLayer(tileMap);
+
+      // 后添加道路图层
+      const roadMap = new triLab.layer.GaodeRoadLayer({
+        minLevel: 2,
+        maxLevel: 18, 
+      });
+      map.addLayer(roadMap);
+
+      // ==================== 立方体设置 ====================
+      // 创建立方体几何体
+      const geometry = new THREE.BoxGeometry(100000, 100000, 100000); // 100km 大小的立方体
+      // 创建立方体材质
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xff0000,
+        transparent: true,
+        opacity: 1,
+        side: THREE.DoubleSide,
+      });
+      // 创建立方体网格
+      const cube = new THREE.Mesh(geometry, material);
+      // ==================== UTM 坐标设置 ====================
+      // 直接设置立方体的 UTM 坐标（例如北京的 UTM 坐标）
+      const beijingUTM = {
+        x: 2938834.56, // UTM X 坐标
+        y: 4851421.1815, // UTM Y 坐标
+        z: 1000, // 高度
+      };
+      cube.position.set(beijingUTM.x, beijingUTM.y, beijingUTM.z);
+      console.log("立方体设置位置:", cube.position);
+      // 添加立方体到场景
+      map.add(cube);
+    </script>
+  </body>
+</html>

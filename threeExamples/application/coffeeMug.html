@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>咖啡</title>
+    <link rel="stylesheet" type="text/css" href="./css/TriLab.css" /> 
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <script type="module">
+      //
+      import triLab from "./TriLab.js";
+
+      import * as THREE from "./three.module.js";
+      // 初始化地图
+      const map = new triLab.Map("map");
+      // 定位 - 稍微倾斜视角
+      const position = [
+        1.595208969371975, 20.047418786968663, 3.684894614889875,
+      ]; // 相机位置（倾斜）
+      const target = [-0.437662413482652, 1.91741929, 0.1]; // 视点位置
+
+      map.flyTo(position, target, { duration: 1000 });
+      window.map = map;
+
+      const textureLoader = new THREE.TextureLoader();
+      const perlinTexture = textureLoader.load(
+        "./threeExamples/application/perlin.png",
+      );
+      perlinTexture.wrapS = THREE.RepeatWrapping;
+      perlinTexture.wrapT = THREE.RepeatWrapping;
+
+      const smokeGeometry = new THREE.PlaneGeometry(1, 1, 16, 64);
+      smokeGeometry.translate(0, 0.5, 0);
+      smokeGeometry.scale(1.5, 6, 1.5);
+
+      // 使用SmokeMaterial类创建烟雾材质
+      const smokeMaterial = new triLab.material.SmokeMaterial({
+        perlinTexture: perlinTexture,
+      });
+
+      const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
+      smoke.rotation.x = Math.PI / 2; // 绕Y轴增加60度的旋转
+
+      // 创建图形图层
+      const graphicLayer = new triLab.layer.GraphicLayer();
+      map.addLayer(graphicLayer);
+
+      // 将烟雾添加到场景中
+      map.add(smoke);
+
+      // SmokeMaterial类已经通过onBeforeRender自动更新时间，不需要手动动画
+
+      // 创建模型并通过graphicLayer加载
+      let model = new triLab.graphic.Model({
+        url: "./threeExamples/application/coffeeMug.glb",
+      });
+      graphicLayer.addGraphic(model);
+    </script>
+  </body>
+</html>

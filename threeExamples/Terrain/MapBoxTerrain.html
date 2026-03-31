@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TriLab MapBox地形地图示例</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="info">TriLab MapBox地形地图示例<br />卫星影像 + 地形高程</div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./THREE.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "three";
+
+      // 地图中心点（UTM 坐标）
+      const center = [2938834.56, 4851421.1815];
+
+      // 初始化 TriLab
+      const map = new triLab.Map("app", {
+        center: center,
+        zoom:16,
+        yaw: -125,
+        pitch: 5,
+        autoRotate: false,
+      });
+
+      // 创建 MapBoxTerrainLayer 实例（卫星影像 + 地形）
+      const terrainLayer = new triLab.layer.MapBoxTerrainLayer({
+        imgStyle: "mapbox.satellite", // MapBox 影像样式
+        demStyle: "mapbox.terrain-rgb", // MapBox 地形样式
+        accessToken: "自己的pk",
+        minLevel: 2,
+        maxLevel: 18,
+        backgroundColor: 0x112233,
+      });
+      map.addLayer(terrainLayer);
+
+      // 添加 earthMask 地球过滤效果
+      const earthMask = new triLab.plug.EarthMask(terrainLayer);
+      map.add(earthMask);
+      console.log('已添加 earthMask 地球过滤效果');
+
+      // ==================== 立方体设置 ====================
+      // 创建立方体几何体
+      const geometry = new THREE.BoxGeometry(100000, 100000, 100000); // 100km 大小的立方体
+
+      // 创建立方体材质
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xff0000, // 红色
+        transparent: true,
+        opacity: 1,
+        side: THREE.DoubleSide,
+      });
+
+      // 创建立方体网格
+      const cube = new THREE.Mesh(geometry, material);
+
+      // ==================== UTM 坐标设置 ====================
+      // 设置立方体的 UTM 坐标
+      const cubePosition = {
+        x: 2938834.56, // UTM X 坐标
+        y: 4851421.1815, // UTM Y 坐标
+        z: 50000, // 高度
+      };
+      cube.position.set(cubePosition.x, cubePosition.y, cubePosition.z);
+      console.log("立方体设置位置:", cube.position);
+
+      // 添加立方体到场景
+      map.add(cube);
+
+      // 添加环境光
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      map.scene.add(ambientLight);
+
+      // 添加方向光
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(1, 1, 1);
+      map.scene.add(directionalLight);
+
+      console.log('TriLab MapBox地形地图示例已加载');
+    </script>
+  </body>
+</html>

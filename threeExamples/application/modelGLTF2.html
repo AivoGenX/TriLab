@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>添加人工模型</title>
+    <script src="./js/dat.gui.min.js"></script>
+    <style>
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      const gui = new dat.GUI();
+      
+      import triLab from "../../TriLab.js";
+      import * as THREE from "../../three.module.js";
+      
+      const map = new triLab.Map('app');
+      map.viewer.setBackground("./data/imgs/bg1.jpg", true);
+      window.map = map;
+
+      // 相机设置 - 使用数组格式
+      const position = [0.18516750948474134, -2.6930158091447356, 1.0988607188972959];
+      const target = [0.15621691426020695, -0.7054506998843644, -0.01282012150134059];
+      map.flyTo(position, target, { duration: 1000 });
+
+      // 创建图形图层
+      const graphicLayer = new triLab.layer.GraphicLayer();
+      map.addLayer(graphicLayer);
+
+      // 初始化模型
+      let model = new triLab.graphic.Model({
+        url: "./data/Model/glTF/DamagedHelmet.gltf",
+      });
+      graphicLayer.addGraphic(model);
+
+      // 初始化GUI颜色（默认值与模型初始颜色一致）
+      const guiConfig = { 颜色: "#b33a3a" };
+      const colorController = gui.addColor(guiConfig, "颜色").onChange(function (value) {
+        // 直接调用setColor，内部会处理异步加载
+        model.setColor(value);
+      });
+
+      // 加载HDR环境贴图
+      triLab.effect.HDRLoader.loadEnvironment(map.scene, {
+        url: "./data/imgs/textures/royal_esplanade_1k.hdr",
+        onProgress: (percent) => {
+          console.log(`环境加载进度: ${percent}%`);
+        },
+        onLoad: (texture) => {
+          console.log("HDR环境贴图加载完成");
+          // 环境贴图加载完成后，设置给模型
+          model.setEnvironment(texture);
+        },
+        onError: (error) => {
+          console.error("自定义错误处理:", error);
+        },
+      });
+
+      // 可选：模型加载完成后，同步GUI颜色到模型实际颜色
+      model.onLoad(() => {
+        const actualColor = "#b33a3a"; // model.getStyle().color;
+        guiConfig.颜色 = actualColor;
+        colorController.updateDisplay(); // 更新GUI显示
+        model.setColor(actualColor); // 确保模型颜色与GUI一致
+        console.log("模型加载完成，当前颜色:", actualColor);
+      });
+
+      // 扫光效果配置（通过graphicLayer添加）
+      const texturePaths = [
+        "./data/imgs/textures/geometry3.png",
+        "./data/imgs/textures/geometry1.png",
+      ];
+      const configs = [
+        {
+          innerCircleWidth: 5.9,
+          circleWidth: 2,
+          circleMax: 7,
+          opacityScale: 0.8,
+          reverseOpacity: false,
+          circleSpeed: 0.06,
+          diff: "#fff25f",
+          color3: "#fff25f",
+          center: [0, 0, 0],
+          intensity: 2,
+          isDisCard: true,
+          positionZ: -1.1,
+        },
+        {
+          innerCircleWidth: 2,
+          circleWidth: 1,
+          circleMax: 7,
+          opacityScale: 0.9,
+          reverseOpacity: false,
+          circleSpeed: 0.03,
+          diff: [0.235, 1, 0.953],
+          color3: [0.235, 1, 0.953],
+          center: [0, 0, 0],
+          intensity: 3,
+          isDisCard: true,
+          positionZ: -1,
+        },
+      ];
+      
+      // 创建扫光效果图形并添加到图形图层
+      let sweepEffect = new triLab.graphic.SweepEffect(texturePaths, configs); 
+      graphicLayer.addGraphic(sweepEffect);
+    </script>
+  </body>
+</html>

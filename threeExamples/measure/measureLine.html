@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- 设置文档的字符编码为 UTF - 8 -->
+    <meta charset="UTF-8" />
+    <!-- 针对 Internet Explorer 浏览器，设置以最新版本的渲染引擎来渲染页面 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- 控制页面在不同设备上的布局和缩放，实现响应式设计 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 设置页面的标题 -->
+    <title>长度测量工具</title>
+    <!-- 页面样式设置 -->
+    <style>
+      html, body, #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .measure_result {
+        position: absolute;
+        z-index: 999;
+        top: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 0 0 0 5px;
+      }
+      
+      .em-cl {
+        color: #ccc;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- 测量结果显示区域 -->
+    <div class="measure_result">
+      <div>测量的对象与点数据看控制台的打印值</div>
+      <!-- 显示测量的点数量 -->
+      测量的点数量：<input type="text" id="measure_result_1" value="" />
+      <!-- 显示测量的总长度 -->
+      测量的总长度：<input type="text" id="measure_result_2" value="" />
+      <!-- 显示测量对象的 UUID -->
+      测量对象的UUID：<input type="text" id="measure_result_3" value="" />
+    </div>
+    <!-- 测量工具按钮区域 -->
+    <div style="position: absolute; z-index: 100; margin: 10px; padding: 10px; background: rgba(255,255,255,0.9); border-radius: 5px;">
+      <h3 style="margin: 0 0 10px 0; font-size: 16px;">测量工具</h3>
+      
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px;">
+        <button id="pointMeasure" style="padding: 5px; font-size: 12px;">点测量</button>
+        <button id="lineMeasure" style="padding: 5px; font-size: 12px;">线测量</button>
+        <button id="areaMeasure" style="padding: 5px; font-size: 12px;">面测量</button>
+        <button id="angleMeasure" style="padding: 5px; font-size: 12px;">角度测量</button>
+        <button id="heightMeasure" style="padding: 5px; font-size: 12px;">高度测量</button>
+        <button id="clearMeasure" style="padding: 5px; font-size: 12px; background: #ff6b6b; color: white;">清除</button>
+      </div>
+      
+      <em class="em-cl">[左键开始/右键结束]</em>
+    </div>
+    <!-- 用于显示地图和点云的容器 -->
+    <div id="app"></div>
+
+    <script type="module">
+      // 从 "/js/TriLab.js" 文件中导入 TriLab、PointCloudLayer 和 Measure 类
+      import triLab from "./TriLab.js";
+      // 注释掉的代码，原本可能用于导入 Three.js 库
+      import * as THREE from "./three.module.js";
+
+      // 创建一个 TriLab 实例，传入 id 为 app 的容器，用于管理地图显示
+      const map = new triLab.Map("app");
+      // 用于存储点云数据文件的 URL 数组
+      const urls = [];
+      // 向数组中添加点云数据文件的 URL
+      urls.push("./data/text.lab");
+
+      // 创建一个点云图层实例
+      const pointcloud = new triLab.layer.PointCloudLayer();
+      // 将点云图层添加到地图中
+      map.addLayer(pointcloud);
+
+      // 异步加载点云数据，加载成功后执行回调函数
+      pointcloud.addClouds(urls).then(() => {
+        // 使地图自适应屏幕显示
+        map.fitToScreen();
+      });
+
+      // 创建测量工具实例，不传入地图实例
+      let measureTool = new triLab.tool.Measure();
+      // 使用map.addEntity方法注册测量工具
+      map.addTool(measureTool);
+
+      // 定义通用样式
+      function getDefaultStyle() {
+        return {
+          pointStyle: {
+            nodeSphereColor: "#ff0000",
+            midPointSphereColor: "#ff00000",
+            nodeSphereSize: 0.1,
+            midPointSphereSize: 0.08,
+            sizeAttenuation: false,
+          },
+          lineStyle: {
+            color: "#00aaff",
+            vertexColor: "#ffd700",
+            lineWidth: 2,
+          },
+          textStyle: {
+            sizeAttenuation: false,
+            labelColor: { r: 255, g: 255, b: 255, a: 1 },
+            labelFontSize: 24,
+            labelBorderColor: { r: 51, g: 51, b: 51, a: 1 },
+            labelBgColor: { r: 0, g: 0, b: 0, a: 1 },
+          },
+        };
+      }
+
+      // 更新测量结果显示
+      function updateMeasureResult(measureObj) {
+        if (!measureObj) return;
+
+        console.log("测量的对象", measureObj);
+        console.log("测量的对象中的点数据", measureObj.points);
+
+        document.getElementById("measure_result_1").value =
+          measureObj.points.length;
+
+        if (measureObj.getTotalDistance) {
+          document.getElementById("measure_result_2").value =
+            measureObj.getTotalDistance();
+        } else if (measureObj.getArea) {
+          document.getElementById("measure_result_2").value =
+            measureObj.getArea();
+        } else {
+          document.getElementById("measure_result_2").value = "N/A";
+        }
+
+        document.getElementById("measure_result_3").value = measureObj.uuid;
+      }
+
+      // 点测量
+      document
+        .getElementById("pointMeasure")
+        .addEventListener("click", function () {
+          let symbol = getDefaultStyle();
+
+          measureTool.point({
+            onComplete: (measurePoint) => {
+              updateMeasureResult(measurePoint);
+            },
+            symbol: symbol,
+          });
+        });
+
+      // 线测量
+      document
+        .getElementById("lineMeasure")
+        .addEventListener("click", function () {
+          let symbol = getDefaultStyle();
+          
+
+          measureTool.distance({
+            onComplete: (measureLine) => {
+              updateMeasureResult(measureLine);
+            },
+            symbol: symbol,
+          });
+        });
+
+      // 面测量
+      document
+        .getElementById("areaMeasure")
+        .addEventListener("click", function () {
+          let symbol = getDefaultStyle(); 
+
+          measureTool.area({
+            onComplete: (measure) => {
+              updateMeasureResult(measure);
+            },
+            symbol: symbol,
+          }); 
+        });
+
+      // 角度测量
+      document
+        .getElementById("angleMeasure")
+        .addEventListener("click", function () {
+          let symbol = getDefaultStyle();
+          
+          measureTool.angle({
+            onComplete: (measure) => {
+              updateMeasureResult(measure);
+            },
+            symbol: symbol,
+          }); 
+        });
+
+      // 高度测量
+      document
+        .getElementById("heightMeasure")
+        .addEventListener("click", function () {
+          let symbol = getDefaultStyle();
+          
+
+          measureTool.height({
+            onComplete: (measureHeight) => {
+              updateMeasureResult(measureHeight);
+            },
+            symbol: symbol,
+          });
+        });
+
+      // 清除测量
+      document
+        .getElementById("clearMeasure")
+        .addEventListener("click", function () {
+          measureTool.clear();
+          // 清空测量结果显示
+          document.getElementById("measure_result_1").value = "";
+          document.getElementById("measure_result_2").value = "";
+          document.getElementById("measure_result_3").value = "";
+          console.log("测量已清除");
+        });
+    </script>
+  </body>
+</html>

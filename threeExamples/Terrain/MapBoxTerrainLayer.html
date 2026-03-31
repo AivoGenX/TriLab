@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TriLab MapBoxTerrainLayer 示例</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="info">TriLab MapBoxTerrainLayer 示例<br>使用 GUI 面板调整参数</div>
+
+    <!-- 使用本地 dat.gui 库 -->
+    <script src="./js/dat.gui.min.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./THREE.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "three";
+      // dat.gui 是全局变量，不需要 import
+      const GUI = window.dat.GUI;
+      // 地图中心点（UTM 坐标）
+      const center = [2938834.56, 4851421.1815];
+      // 初始化 TriLab
+      const map = new triLab.Map("app", {
+        center: center,
+        zoom: 13,
+        pitch: 0,
+        heading: 0,
+        roll: 0,
+        autoRotate: false,
+        effects: {
+          cloudVolume: false,
+          godRays: false
+        }
+      });
+
+      // 从 map 配置中获取 effects 设置
+      const mapEffects = map.options?.effects || {};
+      
+      // 配置参数对象
+      const config = {
+        effects: {
+          cloudVolume: mapEffects.cloudVolume || false,
+          godRays: mapEffects.godRays || false
+        },
+        sun: {
+          elevation: 30,
+          azimuth: 215,
+          intensity: 40
+        },
+        environment: {
+          exposure: 0.6
+        },
+        godRays: {
+          intensity: 3.0,
+          density: 1.0,
+          decay: 1.0,
+          weight: 0.1,
+          exposure: 0.1,
+          cloudThreshold: 0.9
+        },
+        animation: {
+          wind3D: {
+            active: true,
+            speedX: 0.002,
+            speedY: -0.002,
+            speedZ: 0.001
+          },
+          weatherRotation: {
+            active: true,
+            speedU: -0.0001,
+            speedV: 0.0
+          }
+        },
+        dimensions: {
+          height: 20000,
+          baseY: 9000,
+          radius: 500000
+        },
+        cube: {
+          color: 0xff0000,
+          opacity: 1.0,
+          scale: 1.0,
+          rotationX: 0,
+          rotationY: 0,
+          rotationZ: 0
+        },
+        camera: {
+          autoRotate: false,
+          rotateSpeed: 1.0
+        },
+        bloom: {
+          enabled: true,
+          threshold: 0.0,
+          strength: 0.8,
+          radius: 0.5
+        },
+        outline: {
+          enabled: true,
+          edgeStrength: 3.0,
+          edgeGlow: 0.0,
+          edgeThickness: 1.0,
+          pulsePeriod: 0,
+          visibleEdgeColor: '#00ffff',
+          hiddenEdgeColor: '#000000'
+        }
+      };
+
+      // 创建 MapBoxTerrainLayer 实例
+      const tileMap = new triLab.layer.MapBoxTerrainLayer({
+        imgStyle: "mapbox.satellite", // MapBox 影像样式
+        demStyle: "mapbox.terrain-rgb", // MapBox 地形样式
+        accessToken: "自己的pk", // 请替换为您的 MapBox access token
+        minLevel: 2,
+        maxLevel: 18,
+        backgroundColor: 0x112233 
+      });
+      map.addLayer(tileMap);
+
+      // 添加 earthMask 地球过滤效果
+      const earthMask = new triLab.plug.EarthMask(tileMap);
+      map.add(earthMask);
+      console.log('已添加 earthMask 地球过滤效果');
+ 
+      // ==================== 立方体设置 ====================
+      // 创建两个立方体：一个带辉光，一个不带辉光
+      
+      // 立方体1：带辉光效果（BLOOM_SCENE = 1）
+      const geometry1 = new THREE.BoxGeometry(100000, 100000, 100000); // 100km 大小的立方体
+      const material1 = new THREE.MeshStandardMaterial({
+        color: 0xff0000,  // 红色
+        transparent: true,
+        opacity: 1,
+        side: THREE.DoubleSide
+      });
+      const cubeBloom = new THREE.Mesh(geometry1, material1);
+      
+      // 立方体2：不带辉光效果（ALL_SCENE = 0）
+      const geometry2 = new THREE.BoxGeometry(80000, 80000, 80000); // 80km 大小的立方体
+      const material2 = new THREE.MeshStandardMaterial({
+        color: 0x00ff00,  // 绿色
+        transparent: true,
+        opacity: 1,
+        side: THREE.DoubleSide
+      });
+      const cubeNoBloom = new THREE.Mesh(geometry2, material2);
+      
+      // 立方体3：带描边效果（蓝色）
+      const geometry3 = new THREE.BoxGeometry(60000, 60000, 60000); // 60km 大小的立方体
+      const material3 = new THREE.MeshStandardMaterial({
+        color: 0x0000ff,  // 蓝色
+        transparent: true,
+        opacity: 1,
+        side: THREE.DoubleSide
+      });
+      const cubeOutline = new THREE.Mesh(geometry3, material3);
+      
+      // ==================== UTM 坐标设置 ====================
+      // 基础位置
+      const baseX = 2938834.56 - 200000;
+      const baseY = 4851421.1815;
+      const baseZ = 50000;
+      
+      // 设置带辉光立方体的位置（左侧）
+      cubeBloom.position.set(baseX, baseY, baseZ);
+      
+      // 设置不带辉光立方体的位置（中间）
+      cubeNoBloom.position.set(baseX + 80000, baseY, baseZ);
+      
+      // 设置带描边立方体的位置（右侧）
+      cubeOutline.position.set(baseX + 80000 + 70000, baseY, baseZ);
+      
+      console.log("带辉光立方体位置:", cubeBloom.position);
+      console.log("不带辉光立方体位置:", cubeNoBloom.position);
+      console.log("带描边立方体位置:", cubeOutline.position);
+      
+      // 添加立方体到场景
+      map.add(cubeBloom, 'bloom'); // 带辉光效果（自动设置图层 1）
+      map.add(cubeNoBloom); // 不带效果
+      map.add(cubeOutline, 'outline'); // 不带效果（描边在 updateOutline 中根据配置添加）
+      
+      // 保存引用供GUI使用
+      const cube = cubeBloom;  // 兼容原有代码
+
+      // 更新体积云和体积光显示状态
+      function updateEffects() {
+        // 使用 map 方法控制体积云和体积光
+        map.setCloudVolumeEnabled(config.effects.cloudVolume);
+        map.setGodRaysEnabled(config.effects.godRays);
+        
+        console.log('体积云:', config.effects.cloudVolume ? '开启' : '关闭');
+        console.log('体积光:', config.effects.godRays ? '开启' : '关闭');
+      }
+
+      // 创建 GUI
+      const gui = new GUI({ title: '场景控制面板' });
+
+      // 特效控制文件夹
+      const effectsFolder = gui.addFolder('✨ 特效控制');
+      effectsFolder.add(config.effects, 'cloudVolume').name('体积云').onChange(updateEffects);
+      effectsFolder.add(config.effects, 'godRays').name('体积光').onChange(updateEffects);
+      effectsFolder.open();
+
+      // 太阳控制文件夹
+      const sunFolder = gui.addFolder('☀️ 太阳参数');
+      sunFolder.add(config.sun, 'elevation', -90, 90).name('高度角').onChange(updateSunElevation);
+      sunFolder.add(config.sun, 'azimuth', 0, 360).name('方位角').onChange(updateSunAzimuth);
+      sunFolder.add(config.sun, 'intensity', 0, 100).name('强度').onChange(updateSunIntensity);
+      sunFolder.open();
+
+      // 环境控制文件夹
+      const envFolder = gui.addFolder('🌍 环境参数');
+      envFolder.add(config.environment, 'exposure', 0, 2).name('最终曝光').onChange(updateExposure);
+
+      // 更新最终曝光的函数
+      function updateExposure() { 
+        // 使用 map 方法设置环境参数
+        map.setEnvironmentParameters({
+          exposure: config.environment.exposure
+        });
+        
+        console.log('已更新最终曝光:', config.environment.exposure);
+      }
+
+      // 上帝光控制文件夹
+      const godRaysFolder = gui.addFolder('🌟 上帝光');
+      godRaysFolder.add(config.godRays, 'intensity', 0, 10).name('强度').onChange(updateGodRays);
+      godRaysFolder.add(config.godRays, 'density', 0.1, 2).name('密度').onChange(updateGodRays);
+      godRaysFolder.add(config.godRays, 'decay', 0.1, 1).name('衰减').onChange(updateGodRays);
+      godRaysFolder.add(config.godRays, 'weight', 0.1, 2).name('权重').onChange(updateGodRays);
+      godRaysFolder.add(config.godRays, 'exposure', 0.1, 5).name('曝光').onChange(updateGodRays);
+      godRaysFolder.add(config.godRays, 'cloudThreshold', 0, 1).name('云层阈值').onChange(updateGodRays);
+
+      // 更新上帝光参数的函数
+      function updateGodRays() { 
+        // 使用 map 方法设置上帝光参数
+        map.setGodRaysParameters({
+          intensity: config.godRays.intensity,
+          density: config.godRays.density,
+          decay: config.godRays.decay,
+          weight: config.godRays.weight,
+          exposure: config.godRays.exposure,
+          cloudThreshold: config.godRays.cloudThreshold
+        });
+        
+        console.log('已更新上帝光参数');
+      }
+
+      // 立方体控制文件夹
+      const cubeFolder = gui.addFolder('📦 立方体');
+      cubeFolder.addColor(config.cube, 'color').name('颜色').onChange((value) => {
+        material.color.setHex(value);
+      });
+      cubeFolder.add(config.cube, 'opacity', 0, 1).name('透明度').onChange((value) => {
+        material.opacity = value;
+      });
+      cubeFolder.add(config.cube, 'scale', 0.1, 3).name('缩放').onChange((value) => {
+        cube.scale.setScalar(value);
+      });
+      cubeFolder.add(config.cube, 'rotationX', 0, Math.PI * 2).name('旋转X').onChange(updateCubeRotation);
+      cubeFolder.add(config.cube, 'rotationY', 0, Math.PI * 2).name('旋转Y').onChange(updateCubeRotation);
+      cubeFolder.add(config.cube, 'rotationZ', 0, Math.PI * 2).name('旋转Z').onChange(updateCubeRotation);
+
+      // 相机控制文件夹
+      const cameraFolder = gui.addFolder('📷 相机');
+      cameraFolder.add(config.camera, 'autoRotate').name('自动旋转').onChange((value) => {
+        console.log('自动旋转:', value);
+      });
+      cameraFolder.add(config.camera, 'rotateSpeed', 0.1, 5).name('旋转速度');
+
+      // 域尺寸控制文件夹
+      const dimensionsFolder = gui.addFolder('📏 域尺寸');
+      dimensionsFolder.add(config.dimensions, 'height', 0, 200000).name('云厚 (Y)').onChange(updateDimensions);
+      dimensionsFolder.add(config.dimensions, 'baseY', -10000, 50000).name('云底高度').onChange(updateDimensions);
+      dimensionsFolder.add(config.dimensions, 'radius', 10000, 2000000).name('云层半径').onChange(updateDimensions);
+
+      // 更新域尺寸的函数
+      function updateDimensions() { 
+        // 使用 map 方法设置尺寸参数
+        map.setDimensionsParameters({
+          height: config.dimensions.height,
+          baseY: config.dimensions.baseY,
+          radius: config.dimensions.radius
+        });
+        
+        console.log('已更新域尺寸:', config.dimensions);
+      }
+
+      // 工具按钮
+      const toolsFolder = gui.addFolder('🛠️ 工具');
+      toolsFolder.add({
+        resetCamera: () => {
+          console.log('重置相机');
+        }
+      }, 'resetCamera').name('重置相机');
+
+      toolsFolder.add({
+        resetCube: () => {
+          config.cube.rotationX = 0;
+          config.cube.rotationY = 0;
+          config.cube.rotationZ = 0;
+          config.cube.scale = 1.0;
+          cube.rotation.set(0, 0, 0);
+          cube.scale.setScalar(1);
+          gui.controllers.forEach(c => c.updateDisplay());
+        }
+      }, 'resetCube').name('重置立方体');
+
+      // 辉光调试控制文件夹
+      const bloomFolder = gui.addFolder('✨ 辉光调试');
+      bloomFolder.add(config.bloom, 'enabled').name('启用辉光').onChange(updateBloom);
+      bloomFolder.add(config.bloom, 'threshold', 0, 1).name('阈值').onChange(updateBloom);
+      bloomFolder.add(config.bloom, 'strength', 0, 2).name('强度').onChange(updateBloom);
+      bloomFolder.add(config.bloom, 'radius', 0, 1).name('半径').onChange(updateBloom);
+
+      // 更新辉光参数的函数
+      function updateBloom() {
+        // 使用 map 方法启用/禁用辉光
+        map.setBloomEnabled(config.bloom.enabled);
+
+        // 使用 map 方法设置辉光参数
+        map.setBloomParameters({
+          threshold: config.bloom.threshold,
+          strength: config.bloom.strength,
+          radius: config.bloom.radius
+        });
+
+        console.log('已更新辉光状态:', config.bloom.enabled, '参数:', config.bloom);
+      }
+
+      // 描边调试控制文件夹
+      const outlineFolder = gui.addFolder('🖊️ 描边调试');
+      outlineFolder.add(config.outline, 'enabled').name('启用描边').onChange(updateOutline);
+      outlineFolder.add(config.outline, 'edgeStrength', 0, 10).name('边缘强度').onChange(updateOutline);
+      outlineFolder.add(config.outline, 'edgeGlow', 0, 1).name('边缘发光').onChange(updateOutline);
+      outlineFolder.add(config.outline, 'edgeThickness', 0.001, 5).name('边缘厚度').onChange(updateOutline);
+      outlineFolder.add(config.outline, 'pulsePeriod', 0, 5).name('脉冲周期').onChange(updateOutline);
+      outlineFolder.addColor(config.outline, 'visibleEdgeColor').name('可见边颜色').onChange(updateOutline);
+      outlineFolder.addColor(config.outline, 'hiddenEdgeColor').name('隐藏边颜色').onChange(updateOutline);
+
+      // 更新描边参数的函数
+      function updateOutline() { 
+        // 初始化 PotreeGisRenderer
+        if (!map.viewer.potreeGisRenderer) {
+          map.initPotreeGisRenderer();
+        }
+        
+        // 使用 map 方法设置描边参数
+        map.setOutlineParameters({
+          edgeStrength: config.outline.edgeStrength,
+          edgeGlow: config.outline.edgeGlow,
+          edgeThickness: config.outline.edgeThickness,
+          pulsePeriod: config.outline.pulsePeriod,
+          visibleEdgeColor: config.outline.visibleEdgeColor,
+          hiddenEdgeColor: config.outline.hiddenEdgeColor
+        });
+        
+        // 控制描边对象的显示
+        if (config.outline.enabled) {
+          map.add(cubeOutline, 'outline');
+        } else {
+          map.remove(cubeOutline);
+        }
+        
+        console.log('已更新描边参数:', config.outline);
+      }
+
+      // 大气动画控制文件夹
+      const animationFolder = gui.addFolder('🎬 大气动画');
+      const wind3DFolder = animationFolder.addFolder('局部风（3D 纹理偏移）');
+      wind3DFolder.add(config.animation.wind3D, 'active').name('启用').onChange(updateAnimation);
+      wind3DFolder.add(config.animation.wind3D, 'speedX', -0.5, 0.5).name('速度 X').onChange(updateAnimation);
+      wind3DFolder.add(config.animation.wind3D, 'speedY', -0.5, 0.5).name('速度 Y (垂直)').onChange(updateAnimation);
+      wind3DFolder.add(config.animation.wind3D, 'speedZ', -0.5, 0.5).name('速度 Z').onChange(updateAnimation);
+
+      const weatherRotationFolder = animationFolder.addFolder('天气旋转（地图偏移）');
+      weatherRotationFolder.add(config.animation.weatherRotation, 'active').name('启用').onChange(updateAnimation);
+      weatherRotationFolder.add(config.animation.weatherRotation, 'speedU', -0.5, 0.5).name('旋转 (经度)').onChange(updateAnimation);
+      weatherRotationFolder.add(config.animation.weatherRotation, 'speedV', -0.5, 0.5).name('纬度 (漂移)').onChange(updateAnimation);
+
+      // 环境光（保持基础照明）
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+      map.scene.add(ambientLight);
+
+      // 更新太阳高度角
+      function updateSunElevation() { 
+        // 使用 map 方法设置太阳参数
+        map.setSunParameters({
+          elevation: config.sun.elevation
+        });
+        
+        // 调用体积云更新环境
+        map.setCloudVolumeParameters({});
+        
+        console.log('已更新太阳高度角:', config.sun.elevation);
+      }
+
+      // 更新太阳方位角
+      function updateSunAzimuth() { 
+        // 使用 map 方法设置太阳参数
+        map.setSunParameters({
+          azimuth: config.sun.azimuth
+        });
+        
+        // 调用体积云更新环境
+        map.setCloudVolumeParameters({});
+        
+        console.log('已更新太阳方位角:', config.sun.azimuth);
+      }
+
+      // 更新太阳强度
+      function updateSunIntensity() { 
+        // 使用 map 方法设置太阳参数
+        map.setSunParameters({
+          intensity: config.sun.intensity
+        });
+        
+        // 调用体积云更新环境
+        map.setCloudVolumeParameters({});
+        
+        console.log('已更新太阳强度:', config.sun.intensity);
+      }
+
+      // 更新大气动画参数
+      function updateAnimation() { 
+        // 使用 map 方法设置动画参数
+        map.setAnimationParameters({
+          wind3D: config.animation.wind3D,
+          weatherRotation: config.animation.weatherRotation
+        });
+        
+        console.log('已更新大气动画参数');
+      }
+
+      // 更新立方体旋转的函数
+      function updateCubeRotation() {
+        cube.rotation.x = config.cube.rotationX;
+        cube.rotation.y = config.cube.rotationY;
+        cube.rotation.z = config.cube.rotationZ;
+      }
+
+      // 初始更新
+      updateEffects();
+      updateSunElevation();
+      updateSunAzimuth();
+      updateSunIntensity();
+      updateBloom();
+      updateOutline();
+
+      console.log('TriLab MapBoxTerrainLayer 示例已加载');
+      console.log('立方体位置:', cube.position);
+    </script>
+  </body>
+</html>

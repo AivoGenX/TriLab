@@ -1,0 +1,407 @@
+<!--
+ * 文件名称：GraphicLayer.html
+ * 功能说明：GraphicLayer 和 PointGraphic 基础示例
+ * 技术栈：HTML5 + CSS3 + JavaScript (ES6 Modules)
+ * 依赖库：triLab.js、three.module.js
+ * 主要功能：
+ *   1. 创建GraphicLayer图形图层
+ *   2. 在图层上添加多个PointGraphic点图形
+ *   3. 点图形的显示/隐藏控制
+ *   4. 图层和图形的定位功能
+ *   5. 点击事件监听
+ * 创建日期：2024-01-10
+ * 最后修改：2026-01-17
+-->
+<!DOCTYPE html>
+<html lang="zh-CN"> <!-- 更改语言为中文 -->
+  <head>
+    <meta charset="UTF-8" /> <!-- 字符编码：UTF-8 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" /> <!-- IE浏览器兼容模式 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /> <!-- 移动端适配 -->
+    <title>GraphicLayer 和 PointGraphic 示例</title> 
+    <style>
+      /* 基础样式：确保地图容器占满整个屏幕 */
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* 信息面板样式 */
+      .info-panel {
+        position: absolute; /* 绝对定位 */
+        top: 10px; /* 距离顶部10px */
+        left: 10px; /* 距离左侧10px */
+        background: rgba(0, 0, 0, 0.7); /* 半透明黑色背景 */
+        color: white; /* 文本颜色 */
+        padding: 15px; /* 内边距 */
+        border-radius: 5px; /* 圆角 */
+        font-family: Arial, sans-serif; /* 字体 */
+        font-size: 14px; /* 字体大小 */
+        max-width: 300px; /* 最大宽度 */
+      }
+      
+      /* 信息面板标题样式 */
+      .info-panel h3 {
+        margin-top: 0; /* 顶部外边距为0 */
+        margin-bottom: 10px; /* 底部外边距 */
+      }
+      
+      /* 信息面板段落样式 */
+      .info-panel p {
+        margin: 5px 0; /* 上下外边距 */
+      }
+      
+      /* 控制按钮容器样式 */
+      .control-buttons {
+        margin-top: 10px; /* 顶部外边距 */
+        display: flex; /* 弹性布局 */
+        gap: 5px; /* 按钮间距 */
+      }
+      
+      /* 控制按钮基础样式 */
+      .control-buttons button {
+        padding: 5px 10px; /* 内边距 */
+        background: #4CAF50; /* 背景色：绿色 */
+        color: white; /* 文本颜色 */
+        border: none; /* 无边框 */
+        border-radius: 3px; /* 圆角 */
+        cursor: pointer; /* 鼠标指针为手型 */
+        font-size: 12px; /* 字体大小 */
+      }
+      
+      /* 控制按钮悬停样式 */
+      .control-buttons button:hover {
+        background: #45a049; /* 悬停时背景色 */
+      }
+      
+      /* 控制按钮点击样式 */
+      .control-buttons button:active {
+        background: #3d8b40; /* 点击时背景色 */
+      }
+      
+      /* 图形控制区域样式 */
+      .graphic-controls {
+        margin-top: 15px; /* 顶部外边距 */
+        padding-top: 10px; /* 顶部内边距 */
+        border-top: 1px solid rgba(255, 255, 255, 0.3); /* 顶部边框 */
+      }
+      
+      /* 图形控制标题样式 */
+      .graphic-controls h4 {
+        margin: 0 0 10px 0; /* 外边距 */
+        font-size: 12px; /* 字体大小 */
+        color: #ccc; /* 文本颜色：浅灰色 */
+      }
+      
+      /* 图形控制按钮容器样式 */
+      #graphic-buttons {
+        display: flex; /* 弹性布局 */
+        flex-direction: column; /* 垂直排列 */
+        gap: 5px; /* 按钮间距 */
+      }
+      
+      /* 单个图形控制按钮容器样式 */
+      .graphic-button {
+        display: flex; /* 弹性布局 */
+        align-items: center; /* 垂直居中 */
+        gap: 5px; /* 元素间距 */
+        padding: 5px; /* 内边距 */
+        background: rgba(255, 255, 255, 0.1); /* 半透明白色背景 */
+        border-radius: 3px; /* 圆角 */
+      }
+      
+      /* 图形控制按钮文本样式 */
+      .graphic-button span {
+        flex: 1; /* 占据剩余空间 */
+        font-size: 12px; /* 字体大小 */
+      }
+      
+      /* 图形控制按钮基础样式 */
+      .graphic-button button {
+        padding: 3px 8px; /* 内边距 */
+        background: #2196F3; /* 背景色：蓝色 */
+        color: white; /* 文本颜色 */
+        border: none; /* 无边框 */
+        border-radius: 3px; /* 圆角 */
+        cursor: pointer; /* 鼠标指针为手型 */
+        font-size: 11px; /* 字体大小 */
+      }
+      
+      /* 图形控制按钮悬停样式 */
+      .graphic-button button:hover {
+        background: #0b7dda; /* 悬停时背景色 */
+      }
+      
+      /* 隐藏按钮样式 */
+      .graphic-button button.hidden {
+        background: #f44336; /* 背景色：红色 */
+      }
+      
+      /* 隐藏按钮悬停样式 */
+      .graphic-button button.hidden:hover {
+        background: #da190b; /* 悬停时背景色 */
+      }
+      
+      /* 删除按钮样式 */
+      .graphic-button button.delete {
+        background: #f44336; /* 背景色：红色 */
+      }
+      
+      /* 删除按钮悬停样式 */
+      .graphic-button button.delete:hover {
+        background: #da190b; /* 悬停时背景色 */
+      }
+      
+      /* 定位按钮样式 */
+      .graphic-button button.locate {
+        background: #ff9800; /* 背景色：橙色 */
+      }
+      
+      /* 定位按钮悬停样式 */
+      .graphic-button button.locate:hover {
+        background: #f57c00; /* 悬停时背景色 */
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- 地图容器：triLab地图将渲染到这个div中 -->
+    <div id="app"></div>
+    
+    <!-- 信息面板：显示操作说明和控制按钮 -->
+    <div class="info-panel">
+      <!-- 面板标题 -->
+      <h3>GraphicLayer 和 PointGraphic 示例</h3>
+      
+      <!-- 操作说明 -->
+      <p>点击点图形查看信息</p>
+      
+      <!-- 点击信息显示区域：显示当前点击的点图形信息 -->
+      <p id="click-info">点击点图形...</p>
+      
+      <!-- 控制按钮组：用于控制整个图层 -->
+      <div class="control-buttons">
+        <button id="show-layer">显示图层</button> <!-- 显示图层按钮 -->
+        <button id="hide-layer">隐藏图层</button> <!-- 隐藏图层按钮 -->
+        <button id="toggle-layer">切换图层</button> <!-- 切换图层显示状态按钮 -->
+        <button id="zoom-to-layer" style="background: #FF5722;">图层定位</button> <!-- 图层定位按钮：橙色 -->
+        <button id="clear-graphics" style="background: #f44336;">清空所有</button> <!-- 清空所有图形按钮：红色 -->
+      </div>
+      
+      <!-- 单个图形控制区域 -->
+      <div class="graphic-controls">
+        <h4>控制单个点图形</h4>
+        <!-- 动态生成的单个图形控制按钮容器 -->
+        <div id="graphic-buttons"></div>
+      </div>
+    </div>
+    <script type="module">
+      // 导入所需模块（使用命名空间方式）
+      import triLab from "./TriLab.js"; // 导入triLab命名空间
+      import * as THREE from "./three.module.js"; // 导入Three.js库（用于3D渲染）
+
+      // 初始化地图：创建triLab实例，绑定到id为"app"的DOM元素
+      const map = new triLab.Map("app");
+
+      // 创建GraphicLayer图层配置参数
+      const graphicLayer = new triLab.layer.GraphicLayer({
+        id: 'graphic-layer-001', // 图层唯一标识
+        name: '点图形图层', // 图层名称
+        visible: true, // 初始可见性
+        opacity: 1.0, // 透明度
+        symbol: { // 默认符号样式
+          type: 'point', // 点类型
+          size: 15, // 点大小
+          color: '#ff0000', // 点颜色
+          opacity: 1.0, // 点透明度
+          outline: { color: '#ffffff', width: 2 } // 点轮廓
+        },
+        enablePick: true, // 启用拾取功能
+        clickRadius: 20 // 点击检测半径
+      });
+
+      // 将图层添加到地图
+      map.addLayer(graphicLayer);
+
+      // 定义点图形数据
+      const points = [
+        {
+          code: 'point-001', // 点标识
+          name: '点1', // 点名称
+          position: [-1, 0, 0], // 点位置：[x, y, z]
+          symbol: {
+            type: 'point',
+            size: 200, // 点大小
+            color: '#ff0000' // 点颜色：红色
+          }
+        },
+        {
+          code: 'point-002',
+          name: '点2',
+          position: [0, 0, 0],
+          symbol: {
+            type: 'point',
+            size: 20,
+            color: '#00ff00' // 绿色
+          }
+        },
+        {
+          code: 'point-003',
+          name: '点3',
+          position: [1, 0, 0],
+          symbol: {
+            type: 'point',
+            size: 15,
+            color: '#0000ff' // 蓝色
+          }
+        }
+      ];
+
+      // 遍历创建PointGraphic并添加到图层
+      points.forEach(pointData => {
+        const point = new triLab.graphic.PointGraphic(pointData); // 创建点图形实例
+        console.log('创建点:', point.code, point.position); // 控制台输出创建信息
+        graphicLayer.addGraphic(point); // 将点图形添加到图层
+      });
+
+      // 为每个点图形动态创建控制按钮
+      const graphicButtonsContainer = document.getElementById('graphic-buttons');
+      graphicLayer.graphics.forEach(graphic => {
+        // 使用IIFE创建独立作用域，避免闭包问题
+        (function(currentGraphic) {
+          // 创建按钮容器
+          const buttonContainer = document.createElement('div');
+          buttonContainer.className = 'graphic-button';
+          buttonContainer.id = 'graphic-control-' + currentGraphic.uuid;
+          
+          // 创建点图形标签
+          const label = document.createElement('span');
+          label.textContent = currentGraphic.name + ' (' + currentGraphic.code + ')';
+          
+          // 创建显示/隐藏按钮
+          const toggleButton = document.createElement('button');
+          toggleButton.textContent = '隐藏';
+          toggleButton.addEventListener('click', () => {
+            // 切换点图形可见性
+            if (currentGraphic.visible) {
+              currentGraphic.hide(); // 隐藏点图形
+            } else {
+              currentGraphic.show(); // 显示点图形
+            }
+            // 更新按钮文本和样式
+            toggleButton.textContent = currentGraphic.visible ? '隐藏' : '显示';
+            toggleButton.classList.toggle('hidden', !currentGraphic.visible);
+            console.log(currentGraphic.name + ' (' + currentGraphic.code + '): ' + (currentGraphic.visible ? '显示' : '隐藏'));
+          });
+          
+          // 创建删除按钮
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = '删除';
+          deleteButton.className = 'delete';
+          deleteButton.addEventListener('click', () => {
+            // 确认删除操作
+            if (confirm('确定要删除 ' + currentGraphic.name + ' (' + currentGraphic.code + ') 吗？')) {
+              graphicLayer.removeGraphic(currentGraphic.uuid); // 从图层移除点图形
+              buttonContainer.remove(); // 移除按钮容器
+              console.log('删除点图形: ' + currentGraphic.name + ' (' + currentGraphic.code + ')');
+            }
+          });
+          
+          // 创建图层定位按钮（使用图层的locateGraphic方法）
+          const locateButton = document.createElement('button');
+          locateButton.textContent = '定位';
+          locateButton.className = 'locate';
+          locateButton.addEventListener('click', () => {
+            console.log('定位到点图形: ' + currentGraphic.name + ' (' + currentGraphic.code + ')');
+            graphicLayer.locateGraphicByUuid(currentGraphic.uuid); // 图层定位到指定图形
+          });
+          
+          // 创建地图定位按钮（使用map的flyTo方法）
+          const mapLocateButton = document.createElement('button');
+          mapLocateButton.textContent = 'map定位';
+          mapLocateButton.className = 'locate';
+          mapLocateButton.style.background = '#9C27B0'; // 使用紫色区分
+          mapLocateButton.addEventListener('click', () => {
+            console.log('使用map定位到点图形: ' + currentGraphic.name + ' (' + currentGraphic.code + ')');
+            // 使用map的flyTo方法进行定位：参数依次为相机位置、目标位置、选项对象
+            // position是THREE.Vector3类型，使用.x/.y/.z访问
+            const position = [currentGraphic.position.x, currentGraphic.position.y, currentGraphic.position.z + 1]; // 相机位置在目标上方50单位
+            const target = [currentGraphic.position.x, currentGraphic.position.y, currentGraphic.position.z]; // 目标位置
+            map.flyTo(position, target, { duration: 1000 });
+          });
+          
+          // 将元素添加到按钮容器
+          buttonContainer.appendChild(label);
+          buttonContainer.appendChild(toggleButton);
+          buttonContainer.appendChild(deleteButton);
+          buttonContainer.appendChild(locateButton);
+          buttonContainer.appendChild(mapLocateButton);
+          // 将按钮容器添加到界面
+          graphicButtonsContainer.appendChild(buttonContainer);
+        })(graphic); // 传入当前graphic作为参数
+      });
+
+      // 监听图层点击事件
+      graphicLayer.on('click', (e) => {
+        const graphic = e.graphic; // 获取点击的点图形
+        const position = graphic.position; // 获取点位置
+        const symbol = graphic.getSymbol(); // 获取点符号样式
+        // 更新点击信息显示
+        document.getElementById('click-info').innerHTML = 
+          '点击了: ' + graphic.code + '<br>' +
+          '名称: ' + graphic.name + '<br>' +
+          '位置: (' + position.x.toFixed(2) + ', ' + position.y.toFixed(2) + ', ' + position.z.toFixed(2) + ')<br>' +
+          '大小: ' + symbol.size + '<br>' +
+          '颜色: ' + symbol.color;
+      });
+
+      // 监听图层悬停事件
+      graphicLayer.on('hover', (e) => {
+        const graphic = e.graphic;
+        console.log('悬停:', graphic.code);
+      });
+
+      // 控制图层显示和隐藏
+      // 显示图层按钮事件
+      document.getElementById('show-layer').addEventListener('click', () => {
+        graphicLayer.show(); // 调用show方法显示图层
+        console.log('显示图层');
+      });
+
+      // 隐藏图层按钮事件
+      document.getElementById('hide-layer').addEventListener('click', () => {
+        graphicLayer.hide(); // 调用hide方法隐藏图层
+        console.log('隐藏图层');
+      });
+
+      // 切换图层显示状态按钮事件
+      document.getElementById('toggle-layer').addEventListener('click', () => {
+        graphicLayer.visible = !graphicLayer.visible; // 直接修改visible属性切换图层可见性
+        console.log('切换图层:', graphicLayer.visible ? '显示' : '隐藏');
+      });
+
+      // 清空所有点图形按钮事件
+      document.getElementById('clear-graphics').addEventListener('click', () => {
+        if (confirm('确定要清空所有点图形吗？')) { // 确认对话框
+          graphicLayer.clear(); // 调用clear方法清空图层上所有图形
+          document.getElementById('graphic-buttons').innerHTML = ''; // 清空控制按钮
+          console.log('清空所有点图形');
+        }
+      });
+
+      // 图层定位按钮事件处理
+      document.getElementById('zoom-to-layer').addEventListener('click', () => {
+        console.log('调用图层定位方法');
+        graphicLayer.locateLayer(); // 调用locateLayer方法定位到图层范围
+      });
+
+      // 设置地图初始中心点
+      // 参数：[x, y, z] 三维坐标
+      map.setCenter([0, 0, 1]);
+    </script>
+  </body>
+</html>

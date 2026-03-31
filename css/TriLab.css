@@ -1,0 +1,345 @@
+ 
+.render_area{
+	position: 	absolute;
+	/*background: linear-gradient(-90deg, red, yellow);*/
+	top: 		0px;
+	bottom: 	0px;
+	left: 		0px;
+	right: 		0px;
+	overflow: 	hidden;
+	z-index: 	1;
+	-webkit-transition: left .35s;
+	transition: left .35s;
+} 
+.cesiumContainer
+{
+	 
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: green;
+}
+
+.annotation{
+	position:		absolute;
+	padding:		10px;
+	opacity:		0.5;
+	transform:		translate(-50%, -30px);
+	will-change:	left, top;
+}
+
+.annotation-titlebar{
+	color:			white;
+	background-color:	black;
+	border-radius:	1.5em;
+	border:			1px solid rgba(255, 255, 255, 0.7);
+	font-size:		1em;
+	opacity:		1;
+	margin:			auto;
+	display:		table;
+	padding:		1px 8px;
+	cursor: 		pointer;
+}
+
+.annotation-expand{
+	color:			white;
+	font-size:		0.6em;
+	opacity:		1;
+}
+
+.annotation-action-icon{
+	width:			20px;
+	height:			20px;
+	display:		inline-block;
+	vertical-align:	middle;
+	line-height:	1.5em;
+	text-align:		center;
+	font-family:	Arial;
+	font-weight:	bold;
+	cursor: 		pointer;
+}
+
+.annotation-action-icon:hover{
+	filter:			drop-shadow(0px 0px 1px white);
+	width:			24px;
+	height:			24px;
+	cursor: 		pointer;
+	
+}
+
+.annotation-item {
+	color:			white;
+	background-color: 	black;
+	opacity:		0.5;
+	border-radius:	1.5em;
+	font-size:		1em;
+	line-height:	1.5em;
+	padding:		1px 8px 0px 8px;
+	font-weight:	bold;
+	display:		flex;
+	cursor:			default;
+}
+
+.annotation-item:hover {
+	opacity:		1.0;
+	box-shadow:		0 0 5px #ffffff;
+}
+
+.annotation-main{
+	display:		flex;
+	flex-grow:		1;
+}
+
+.annotation-label{
+	display:		inline-block;
+	height:			100%;
+	flex-grow:		1;
+	user-select:	none;
+	-moz-user-select: none;
+	z-index:		100;
+	vertical-align:	middle;
+	line-height:	1.5em;
+	font-family:	Arial;
+	font-weight:	bold;
+	cursor: 		pointer;
+	white-space:	nowrap;
+}
+
+.annotation-description{
+	position:		relative;
+	color:			white;
+	background-color:	black;
+	padding:		10px;
+	margin:			5px 0px 0px 0px;
+	border-radius:	4px;
+	display:		none;
+	max-width:		500px;
+	width:			500px;
+}
+
+.annotation-description-close{
+	filter:			invert(100%);
+	float:			right;
+	opacity:		0.5;
+	margin:			0px 0px 8px 8px;
+}
+
+	
+.annotation-description-content{
+	color:			white;
+}
+
+.annotation-icon{
+	width:		20px;
+	height:		20px;
+	filter:		invert(100%);
+	margin:		2px 2px;
+	opacity:	0.5;
+}
+
+/*****popup弹出框样式******/
+.TriLab-template-title {
+  height: 33px;
+  line-height: 33px;
+  padding: 0 10px 0 10px;
+  font-size: 16px;
+  color: var(--mars-text-color, #ffffff);
+  background-color: var(--mars-main-color, #337ab7);
+  border-bottom: 1px solid var(--mars-hover-color, #3ea6ff);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.TriLab-template-title a {
+  color: var(--mars-msg-title-color, #479be0);
+  text-decoration: none;
+}
+.TriLab-template-content {
+  min-width: 150px;
+  margin-top: 0px;
+  padding: 10px;
+  color: var(--mars-text-color, #ffffff);
+  font-size: 14px;
+  max-height: 490px;
+  overflow-y: auto;
+  background-color: var(--mars-base-bg, rgba(63, 72, 84, 0.95));
+}
+.TriLab-template-content > div {
+  margin-top: 5px;
+}
+.TriLab-template-content label {
+  margin: 0 10px;
+  padding-right: 6px;
+  min-width: 55px;
+  float: left;
+}
+
+/* 弹窗按钮样式 */
+.TriLab-popup-btn {
+  display: inline-block;
+  margin: 4px 2px;
+  padding: 4px 12px;
+  font-size: 12px;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-decoration: none;
+  pointer-events: all;
+}
+
+.TriLab-popup-btn-custom {
+  color: var(--mars-text-color, #ffffff);
+  background-color: var(--mars-main-color, #337ab7);
+  border-color: var(--mars-main-color, #2e6da4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.TriLab-popup-btn-custom:hover {
+  color: #fff;
+  background-color: var(--mars-hover-color, #3ea6ff);
+  border-color: var(--mars-hover-color, #3ea6ff);
+  box-shadow: 0 4px 8px rgba(62, 166, 255, 0.4);
+}
+
+
+.TriLab-divGraphic {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.TriLab-divGraphic:hover {
+	z-index: 9999 !important;
+}
+
+.TriLab-divGraphic-edit {
+	background-color: rgba(254, 87, 161, 0.1);
+	border: 2px dashed rgba(172, 85, 59, 0.768);
+	-webkit-border-radius: 2px;
+	border-radius: 2px;
+	margin: -2px;
+	box-sizing: content-box;
+}
+
+.TriLab-popup {
+	-webkit-user-select: auto;
+	-moz-user-select: auto;
+	-ms-user-select: auto;
+	user-select: auto;
+}
+
+.TriLab-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	padding: 4px 4px 0 0;
+	text-align: center;
+	width: 20px;
+	height: 20px;
+	font: 16px/14px Tahoma, Verdana, sans-serif;
+	text-decoration: none;
+	font-weight: bold;
+	background: transparent;
+	z-index: 20170825;
+	cursor: pointer;
+}
+
+.TriLab-popup-close-button:hover {
+	color: #ff4444;
+}
+
+.TriLab-popup-content-wrapper {
+	text-align: center;
+	box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+	padding: 1px;
+	text-align: left;
+	border-radius: 3px;
+}
+
+.TriLab-popup-content {
+	margin: 10px;
+	font-size: 13px;
+	max-width: 700px;
+	min-width: 50px;
+	max-height: 550px;
+	overflow-y: auto;
+}
+
+.TriLab-popup-tip-container {
+	margin: 0 auto;
+	width: 40px;
+	height: 17px;
+	position: relative;
+	overflow: hidden;
+}
+
+.TriLab-popup-tip {
+	box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+	margin: -10px auto 0;
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	transform: rotate(45deg);
+	background-color: var(--mars-base-bg, rgba(63, 72, 84, 0.95));
+}
+
+.TriLab-popup-scrolled {
+	overflow: auto;
+	border-bottom: 1px solid #ddd;
+	border-top: 1px solid #ddd;
+}
+
+.TriLab-popup-color {
+	color: var(--mars-text-color, #ffffff);
+}
+
+.TriLab-popup-background {
+	background: var(--mars-base-bg, rgba(63, 72, 84, 0.9));
+}
+
+.TriLab-popup-animation {
+	animation-duration: 0.3s;
+	animation-fill-mode: both;
+	animation-name: TriLab-popup-swashIn;
+}
+
+@keyframes TriLab-popup-swashIn {
+	0% {
+		opacity: 0;
+		transform-origin: 50% 50%;
+		transform: scale(0, 0);
+	}
+	90% {
+		opacity: 1;
+		transform-origin: 50% 50%;
+		transform: scale(0.9, 0.9);
+	}
+	100% {
+		opacity: 1;
+		transform-origin: 50% 50%;
+		transform: scale(1, 1);
+	}
+}
+
+.TriLab-popup-btn {
+	padding: 3px 10px;
+	border: 1px solid #209ffd;
+	background: #209ffd1c;
+	color: var(--mars-text-color, #ffffff);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	transition: all 0.2s ease;
+}
+
+.TriLab-popup-btn:hover {
+	background: #209ffd33;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}

@@ -1,0 +1,407 @@
+<!--
+ * 文件名称：PolylineGraphic.html
+ * 功能说明：GraphicLayer 和 PolylineGraphic 基础示例
+ * 技术栈：HTML5 + CSS3 + JavaScript (ES6 Modules)
+ * 依赖库：triLab.js、three.module.js
+ * 主要功能：
+ *   1. 创建GraphicLayer图形图层
+ *   2. 在图层上添加多个PolylineGraphic线图形
+ *   3. 线图形的显示/隐藏控制
+ *   4. 图层和图形的定位功能
+ *   5. 点击事件监听
+ *   6. 线条样式修改（颜色、宽度、虚线）
+ * 创建日期：2024-01-10
+ * 最后修改：2026-03-19
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GraphicLayer 和 PolylineGraphic 示例</title>
+    <style>
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .info-panel {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        max-width: 300px;
+      }
+      
+      .info-panel h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+      
+      .info-panel p {
+        margin: 5px 0;
+      }
+      
+      .control-buttons {
+        margin-top: 10px;
+        display: flex;
+        gap: 5px;
+      }
+      
+      .control-buttons button {
+        padding: 5px 10px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      
+      .control-buttons button:hover {
+        background: #45a049;
+      }
+      
+      .control-buttons button:active {
+        background: #3d8b40;
+      }
+      
+      .graphic-controls {
+        margin-top: 15px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .graphic-controls h4 {
+        margin: 0 0 10px 0;
+        font-size: 12px;
+        color: #ccc;
+      }
+      
+      #graphic-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      
+      .graphic-button {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+      }
+      
+      .graphic-button span {
+        flex: 1;
+        font-size: 12px;
+      }
+      
+      .graphic-button button {
+        padding: 3px 8px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 11px;
+      }
+      
+      .graphic-button button:hover {
+        background: #0b7dda;
+      }
+      
+      .graphic-button button.hidden {
+        background: #f44336;
+      }
+      
+      .graphic-button button.hidden:hover {
+        background: #da190b;
+      }
+      
+      .graphic-button button.delete {
+        background: #f44336;
+      }
+      
+      .graphic-button button.delete:hover {
+        background: #da190b;
+      }
+      
+      .graphic-button button.locate {
+        background: #ff9800;
+      }
+      
+      .graphic-button button.locate:hover {
+        background: #f57c00;
+      }
+      
+      .style-controls {
+        display: flex;
+        gap: 5px;
+        margin-top: 5px;
+      }
+      
+      .style-controls button {
+        padding: 2px 6px;
+        background: #9C27B0;
+        color: white;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        font-size: 10px;
+      }
+      
+      .style-controls button:hover {
+        background: #7B1FA2;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app"></div>
+    
+    <div class="info-panel">
+      <h3>GraphicLayer 和 PolylineGraphic 示例</h3>
+      
+      <p>点击线图形查看信息</p>
+      
+      <p id="click-info">点击线图形...</p>
+      
+      <div class="control-buttons">
+        <button id="show-layer">显示图层</button>
+        <button id="hide-layer">隐藏图层</button>
+        <button id="toggle-layer">切换图层</button>
+        <button id="zoom-to-layer" style="background: #FF5722;">图层定位</button>
+        <button id="clear-graphics" style="background: #f44336;">清空所有</button>
+      </div>
+      
+      <div class="graphic-controls">
+        <h4>控制单个线图形</h4>
+        <div id="graphic-buttons"></div>
+      </div>
+    </div>
+    
+    <script type="module">
+      // 导入所需模块（使用命名空间方式）
+      import triLab from "./TriLab.js";
+      import * as THREE from "./three.module.js";
+
+      const map = new triLab.Map("app");
+
+      const graphicLayer = new triLab.layer.GraphicLayer({
+        id: 'graphic-layer-001',
+        name: '线图形图层',
+        visible: true,
+        opacity: 1.0,
+        enablePick: true,
+        clickRadius: 10
+      });
+
+      map.addLayer(graphicLayer);
+
+      const polylines = [
+        {
+          code: 'line-001',
+          name: '线1（窄线）',
+          coordinates: [[-5, -2, 0], [-2, 2, 0], [1, -1, 0], [4, 3, 0]],
+          symbol: {
+            type: 'polyline',
+            color: '#ff0000',
+            width: 1,
+            opacity: 1.0,
+            dashSize: 0,
+            gapSize: 0
+          }
+        },
+        {
+          code: 'line-002',
+          name: '线2（宽线）',
+          coordinates: [[-3, 3, 0], [0, 0, 0], [3, 3, 0]],
+          symbol: {
+            type: 'polyline',
+            color: '#00ff00',
+            width: 5,
+            opacity: 0.8,
+            dashSize: 0,
+            gapSize: 0
+          }
+        },
+        {
+          code: 'line-003',
+          name: '线3（虚线）',
+          coordinates: [[-4, -3, 0], [0, 0, 0], [4, -3, 0]],
+          symbol: {
+            type: 'polyline',
+            color: '#0000ff',
+            width: 2,
+            opacity: 1.0,
+            dashSize: 3,
+            gapSize: 2
+          }
+        },
+        {
+          code: 'line-004',
+          name: '线4（宽虚线）',
+          coordinates: [[2, -4, 0], [5, -1, 0], [2, 2, 0]],
+          symbol: {
+            type: 'polyline',
+            color: '#ff00ff',
+            width: 4,
+            opacity: 0.6,
+            dashSize: 5,
+            gapSize: 3
+          }
+        }
+      ];
+
+      polylines.forEach(lineData => {
+        const line = new triLab.graphic.PolylineGraphic(lineData);
+        console.log('创建线:', line.code);
+        graphicLayer.addGraphic(line);
+      });
+
+      const graphicButtonsContainer = document.getElementById('graphic-buttons');
+      graphicLayer.graphics.forEach(graphic => {
+        // 使用IIFE创建独立作用域，避免闭包问题
+        (function(currentGraphic) {
+          const buttonContainer = document.createElement('div');
+          buttonContainer.className = 'graphic-button';
+          buttonContainer.id = 'graphic-control-' + currentGraphic.uuid;
+          
+          const label = document.createElement('span');
+          label.textContent = currentGraphic.name + ' (' + currentGraphic.code + ')';
+          
+          const toggleButton = document.createElement('button');
+          toggleButton.textContent = '隐藏';
+          toggleButton.addEventListener('click', () => {
+            if (currentGraphic.visible) {
+              currentGraphic.hide();
+            } else {
+              currentGraphic.show();
+            }
+            toggleButton.textContent = currentGraphic.visible ? '隐藏' : '显示';
+            toggleButton.classList.toggle('hidden', !currentGraphic.visible);
+            console.log(currentGraphic.name + ' (' + currentGraphic.code + '): ' + (currentGraphic.visible ? '显示' : '隐藏'));
+          });
+          
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = '删除';
+          deleteButton.className = 'delete';
+          deleteButton.addEventListener('click', () => {
+            if (confirm('确定要删除 ' + currentGraphic.name + ' (' + currentGraphic.code + ') 吗？')) {
+              graphicLayer.removeGraphic(currentGraphic.uuid);
+              buttonContainer.remove();
+              console.log('删除线图形: ' + currentGraphic.name + ' (' + currentGraphic.code + ')');
+            }
+          });
+          
+          const locateButton = document.createElement('button');
+          locateButton.textContent = '定位';
+          locateButton.className = 'locate';
+          locateButton.addEventListener('click', () => {
+            console.log('定位到线图形: ' + currentGraphic.name + ' (' + currentGraphic.code + ')');
+            graphicLayer.locateGraphicByUuid(currentGraphic.uuid);
+          });
+          
+          const mapLocateButton = document.createElement('button');
+          mapLocateButton.textContent = 'map定位';
+          mapLocateButton.className = 'locate';
+          mapLocateButton.style.background = '#9C27B0';
+          mapLocateButton.addEventListener('click', () => {
+            console.log('使用map定位到线图形: ' + currentGraphic.name + ' (' + currentGraphic.code + ')');
+            // 使用map的flyTo方法进行定位：参数依次为相机位置、目标位置、选项对象
+            // position是THREE.Vector3类型，使用.x/.y/.z访问
+            const position = [currentGraphic.position.x, currentGraphic.position.y, currentGraphic.position.z + 50]; // 相机位置在目标上方50单位
+            const target = [currentGraphic.position.x, currentGraphic.position.y, currentGraphic.position.z]; // 目标位置
+            map.flyTo(position, target, { duration: 1000 });
+          });
+
+          const colorButton = document.createElement('button');
+          colorButton.textContent = '变色';
+          colorButton.style.background = '#E91E63';
+          colorButton.addEventListener('click', () => {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            const currentColor = currentGraphic.getSymbol().color;
+            const currentIndex = colors.indexOf(currentColor);
+            const nextIndex = (currentIndex + 1) % colors.length;
+            currentGraphic.setColor(colors[nextIndex]);
+            console.log('修改颜色: ' + currentGraphic.name + ' -> ' + colors[nextIndex]);
+          });
+
+          const styleControls = document.createElement('div');
+          styleControls.className = 'style-controls';
+          styleControls.appendChild(colorButton);
+          
+          buttonContainer.appendChild(label);
+          buttonContainer.appendChild(toggleButton);
+          buttonContainer.appendChild(deleteButton);
+          buttonContainer.appendChild(locateButton);
+          buttonContainer.appendChild(mapLocateButton);
+          buttonContainer.appendChild(styleControls);
+          
+          graphicButtonsContainer.appendChild(buttonContainer);
+        })(graphic); // 传入当前graphic作为参数
+      });
+
+      graphicLayer.on('click', (e) => {
+        const graphic = e.graphic;
+        const position = graphic.position;
+        const symbol = graphic.getSymbol();
+        document.getElementById('click-info').innerHTML = 
+          '点击了: ' + graphic.code + '<br>' +
+          '名称: ' + graphic.name + '<br>' +
+          '位置: (' + position.x.toFixed(2) + ', ' + position.y.toFixed(2) + ', ' + position.z.toFixed(2) + ')<br>' +
+          '宽度: ' + symbol.width + '<br>' +
+          '颜色: ' + symbol.color + '<br>' +
+          '透明度: ' + symbol.opacity + '<br>' +
+          '虚线: ' + (symbol.dashSize > 0 ? '是' : '否');
+      });
+
+      graphicLayer.on('hover', (e) => {
+        const graphic = e.graphic;
+        console.log('悬停:', graphic.code);
+      });
+
+      document.getElementById('show-layer').addEventListener('click', () => {
+        graphicLayer.show();
+        console.log('显示图层');
+      });
+
+      document.getElementById('hide-layer').addEventListener('click', () => {
+        graphicLayer.hide();
+        console.log('隐藏图层');
+      });
+
+      document.getElementById('toggle-layer').addEventListener('click', () => {
+        graphicLayer.visible = !graphicLayer.visible;
+        console.log('切换图层:', graphicLayer.visible ? '显示' : '隐藏');
+      });
+
+      document.getElementById('clear-graphics').addEventListener('click', () => {
+        if (confirm('确定要清空所有线图形吗？')) {
+          graphicLayer.clear();
+          document.getElementById('graphic-buttons').innerHTML = '';
+          console.log('清空所有线图形');
+        }
+      });
+
+      document.getElementById('zoom-to-layer').addEventListener('click', () => {
+        console.log('调用图层定位方法');
+        graphicLayer.locateLayer();
+      });
+
+      map.setCenter([0, 0, 5]);
+    </script>
+  </body>
+</html>

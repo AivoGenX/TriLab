@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>辉光线+深色地图</title>
+    <script src="./js/dat.gui.min.js"></script>
+    <style type="text/css">
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        .dg.ac {
+            z-index: 100 !important;
+            right: auto !important;
+            left: 10px !important;
+            top: 10px !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map" style="width:100%;height: 100%"></div>
+</body>
+<script type="module">
+    import triLab from './TriLab.js';
+    
+    let mapViewer = new triLab.Map('map', {
+        yaw: 0, pitch: 0, zoom: 9, autoRotate: false,
+        center: [12958323.435172467, 4893472.508009557, 0]
+    });
+    
+    const gaodeLayer = new triLab.layer.GaodeBlackLayer({
+      style: "8",
+      minLevel: 2,
+      maxLevel: 18
+    });
+    mapViewer.addLayer(gaodeLayer);
+    
+    let lineLayer;
+
+    fetch("./data/line/line.geojson").then((res) => {
+        return res.json();
+    }).then((resData) => {
+        let features = resData.features || [];
+        let fs = triLab.utils.GeometryUtil.LonLatToUtmFeatures(features);
+        
+        lineLayer = new triLab.layer.PolylineLayer(fs, {
+            width: 2,
+            color: 'rgb(255,90,0)',
+            dashSize: 1000,
+            gapSize: 1000,
+            bloom: true
+        });
+        lineLayer.position.z=175;
+        mapViewer.add(lineLayer);
+        initBloomControls();
+    });
+    
+    mapViewer.setBloom(2, 2, 2);
+    
+    function initBloomControls() {
+        const bloomParams = {
+            lineColor: '#ff5a00',
+            threshold: 0.2,
+            strength: 0.8,
+            radius: 0.5
+        };
+        
+        const gui = new dat.GUI();
+        
+        gui.addColor(bloomParams, 'lineColor')
+            .name('线条颜色')
+            .onChange(value => {
+                if (lineLayer) {
+                    lineLayer.setStyle({ color: value });
+                }
+            });
+
+        gui.add(bloomParams, 'threshold', 0, 5, 0.1)
+            .name('阈值')
+            .onChange(value => {
+                mapViewer.setBloom(value, bloomParams.strength, bloomParams.radius);
+            });
+            
+        gui.add(bloomParams, 'strength', 0, 5, 0.1)
+            .name('强度')
+            .onChange(value => {
+                mapViewer.setBloom(bloomParams.threshold, value, bloomParams.radius);
+            });
+            
+        gui.add(bloomParams, 'radius', 0, 5, 0.1)
+            .name('半径')
+            .onChange(value => {
+                mapViewer.setBloom(bloomParams.threshold, bloomParams.strength, value);
+            });
+            
+        gui.add({ reset: () => {
+            bloomParams.threshold = 2;
+            bloomParams.strength = 2;
+            bloomParams.radius = 2;
+            mapViewer.setBloom(2, 2, 2);
+            gui.updateDisplay();
+        }}, 'reset').name('重置参数');
+    }
+</script>
+
+</html>

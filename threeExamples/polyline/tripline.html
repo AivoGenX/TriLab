@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>流动线</title>
+    <style type="text/css">
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map" style="width:100%;height: 100%"></div>
+</body>
+<script type="module">
+    import triLab from './TriLab.js';
+
+    let mapViewer = new triLab.Map('map', {
+        yaw: 0, pitch: 0, zoom: 11, autoRotate: false,
+        center: [11860642.077245457, 3433381.462018016, 0]
+    });
+    
+    const tileLayer = new triLab.layer.GaodeBlackLayer({
+        minLevel: 2,
+        maxLevel: 18
+    });
+    mapViewer.addLayer(tileLayer);
+    
+    const graphicLayer = new triLab.layer.GraphicLayer();
+    mapViewer.addLayer(graphicLayer);
+    
+    fetch('./data/line/chongqing_line.json').then((res) => {
+        return res.json()
+    }).then((resData) => {
+        let features = resData.features;
+        for (let feature of features) {
+            let result = [], coords = feature.geometry.coordinates;
+            for (let coord of coords) {
+                let lonlat = triLab.utils.GeometryUtil.lonLatToUTM(coord[0], coord[1], 0);
+                result.push(lonlat);
+            }
+            let Trip = new triLab.graphic.TripLine({ 
+                vertices: result, 
+                imgUrl: './data/line/red_line.png', 
+                color: "#ff0000", 
+                width: 20 
+            });
+            graphicLayer.addGraphic(Trip);
+        }
+    })
+</script>
+
+</html>

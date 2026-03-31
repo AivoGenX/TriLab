@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, user-scalable=no, width=device-width"
+    />
+    <title>建筑物效果 - 顶部颜色</title>
+    <style type="text/css">
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./THREE.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "three";
+
+      // 北京经纬度
+      const beijingLon = 116.4;
+      const beijingLat = 39.9;
+
+      // 使用 ProjMCT 将北京经纬度转换为 Web Mercator 坐标（lon0: 90）
+      const proj = new triLab.projection.Mercator(90);
+      const beijingUTM = proj.project(beijingLon, beijingLat);
+      console.log("北京经纬度:", beijingLon, beijingLat);
+      console.log(
+        "北京 Web Mercator 坐标 (lon0: 90):",
+        beijingUTM.x,
+        beijingUTM.y,
+      );
+
+      // 杭州经纬度（建筑物位置）
+      const hangzhouLon = 120.17;
+      const hangzhouLat = 30.21;
+      const hangzhouUTM = proj.project(hangzhouLon, hangzhouLat);
+      console.log("杭州经纬度:", hangzhouLon, hangzhouLat);
+      console.log(
+        "杭州 Web Mercator 坐标 (lon0: 90):",
+        hangzhouUTM.x,
+        hangzhouUTM.y,
+      );
+
+      // 地图中心点（Web Mercator 坐标）- 使用北京坐标
+      let center = [beijingUTM.x, beijingUTM.y];
+      // 初始化 TriLab
+      const map = new triLab.Map("map", {
+        center: center,
+        zoom: 16.5,
+        autoRotate: false,
+      });
+
+      // 飞行到杭州建筑物位置
+      const position = [hangzhouUTM.x, hangzhouUTM.y - 1500, 700]; // 相机位置在目标上方700单位
+      const target = [hangzhouUTM.x, hangzhouUTM.y, 0]; // 目标位置
+      map.flyTo(position, target, { duration: 1000 });
+
+      // 创建 GaodeLayer 实例
+      const gaodeLayer = new triLab.layer.GaodeLayer({
+        style: "8", // 高德地图样式，8为默认样式
+        minLevel: 2,
+        maxLevel: 18,
+        backgroundColor: 0x112233,
+      });
+      map.addLayer(gaodeLayer);
+
+      // 加载建筑物数据
+      fetch("./data/build1.geojson")
+        .then((res) => {
+          return res.json();
+        })
+        .then((resData) => {
+          const features = resData.features || [];
+
+          console.log("原始 features 数量:", features.length);
+          console.log("第一个 feature:", features[0]);
+
+          // 将经纬度转换为 Web Mercator 坐标，使用 lon0: 90 与高德地图瓦片系统兼容
+          const fs = triLab.utils.GeometryUtil.LonLatToUtmFeatures(
+            features,
+            90,
+          );
+
+          console.log("转换后的 features 数量:", fs.length);
+          console.log("第一个转换后的 feature:", fs[0]);
+
+          // 创建建筑物图层 - 顶部颜色和周边颜色分开
+          const buildLayer = new triLab.layer.BuildingLayer(fs, {
+            topColor: "#FFFFFF",
+            bottomColor: "#29395b",
+            scaleHeight: 2, // 高度缩放因子，使建筑物更高
+            opacity: 1.0,
+          });
+
+          console.log("BuildingLayer 创建完成:", buildLayer);
+          console.log("BuildingLayer children:", buildLayer.children);
+          console.log("BuildingLayer position:", buildLayer.position);
+
+          // 设置建筑物图层的 z 轴位置，确保在地图上方
+          buildLayer.position.z = 180;
+
+          map.addLayer(buildLayer);
+
+          console.log("建筑物图层已添加");
+          console.log("地图中心点:", center);
+        })
+        .catch((error) => {
+          console.error("加载建筑物数据失败:", error);
+        });
+
+      console.log("TriLab 建筑物效果示例已加载");
+    </script>
+  </body>
+</html>
