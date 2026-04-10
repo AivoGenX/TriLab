@@ -1,0 +1,432 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, user-scalable=no, width=device-width"
+    />
+    <title>GeoLayer 点示例 - 加载 GeoJSON 点数据</title>
+    <link rel="stylesheet" href="./css/TriLab.css" />
+    <style type="text/css">
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+      #info {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        z-index: 1000;
+      }
+      #flyToButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #00a7ff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1000;
+      }
+      #flyToButton:hover {
+        background: #0088cc;
+      }
+      #toggleClickButton {
+        position: absolute;
+        top: 50px;
+        right: 10px;
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1000;
+      }
+      #toggleClickButton.disabled {
+        background: #dc3545;
+      }
+      #toggleClickButton:hover {
+        opacity: 0.8;
+      }
+      #toggleVisibilityButton {
+        position: absolute;
+        top: 90px;
+        right: 10px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1000;
+      }
+      #toggleVisibilityButton.hidden {
+        background: #ffc107;
+      }
+      #toggleVisibilityButton:hover {
+        opacity: 0.8;
+      }
+      #toggleLabelsButton {
+        position: absolute;
+        top: 130px;
+        right: 10px;
+        background: #e83e8c;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1000;
+      }
+      #toggleLabelsButton.hidden {
+        background: #6f42c1;
+      }
+      #toggleLabelsButton:hover {
+        opacity: 0.8;
+      }
+      #togglePointStyleButton {
+        position: absolute;
+        top: 170px;
+        right: 10px;
+        background: #ff8c00;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        z-index: 1000;
+      }
+      #togglePointStyleButton.default {
+        background: #20c997;
+      }
+      #togglePointStyleButton:hover {
+        opacity: 0.8;
+      }
+      #featureInfo {
+        position: absolute;
+        top: 60px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        z-index: 1000;
+        max-width: 300px;
+        display: none;
+      }
+      #featureInfo h4 {
+        margin: 0 0 10px 0;
+        color: #00ffff;
+      }
+      #featureInfo p {
+        margin: 5px 0;
+      }
+      #featureInfo .close-btn {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        cursor: pointer;
+        color: #ff4444;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="info">
+      <h3>GeoLayer 点示例</h3>
+      <p>加载 GeoJSON 点数据</p>
+    </div>
+    <button id="flyToButton">图层飞入定位</button>
+    <button id="toggleClickButton">点击事件: 开启</button>
+    <button id="toggleVisibilityButton">图层显示: 可见</button>
+    <button id="toggleLabelsButton">文字显示: 可见</button>
+    <button id="togglePointStyleButton">点样式: 图片点</button>
+    <div id="featureInfo">
+      <span class="close-btn">×</span>
+      <h4>特征信息</h4>
+      <div id="featureContent"></div>
+    </div>
+    <div id="map" style="width: 100%; height: 100%"></div>
+  </body>
+  <script type="module">
+    import triLab from "./TriLab.js";
+
+    let mapViewer = new triLab.Map("map", {
+      yaw: 0,
+      pitch: 0,
+      zoom: 9,
+      autoRotate: false,
+      center: [12958323.435172467, 4893472.508009557, 0],
+    });
+
+    let tileLayer = new triLab.layer.GaodeLayer({
+      minLevel: 2,
+      maxLevel: 18,
+    });
+    mapViewer.addLayer(tileLayer);
+
+    const geoLayer = new triLab.layer.GeoLayer({
+      name: "点数据",
+      url: "./data/json/hfty-point.json",
+      isLat: true,
+      symbol: {
+        pointStyle: {
+          size: 20, // 点的大小
+          color: "#ff0000", // 点的颜色
+          url: "./data/imgs/4186382.png", // 点的图片纹理
+        },
+        textStyle: {
+          // 文字显示配置
+          labelField: "项目名称",
+          labelColor: "#ffffff", // 白色文字，更清晰
+          labelBackgroundColor: "rgba(0, 64, 128, 0.8)", // 深蓝色半透明背景
+          labelFontSize: 580, // 适当增大字体
+          labelScale: 70, // 适当增大缩放
+          labelBorderColor: "#003366", // 深蓝色边框
+          labelTextStrokeColor: "#000000", // 黑色描边，提高文字清晰度
+          labelTextStrokeWidth: 2, // 描边宽度
+          // 距离显示条件
+          labelDistanceDisplayCondition: false,
+          labelDistanceDisplayCondition_near: 0,
+          labelDistanceDisplayCondition_far: 30000,
+        },
+ 
+      },
+      allowClick: true,
+      flyTo: true,
+      distanceDisplayCondition: true,
+      distanceDisplayCondition_near: 0,
+      distanceDisplayCondition_far: 50000000,
+      popup: [
+        { field: "项目名称", name: "项目名称" },
+        { field: "设施类型", name: "设施类型" },
+        { field: "所在区县", name: "所在区县" },
+        { field: "总投资额（", name: "总投资额（万元）" },
+        {
+          name: "详情",
+          type: "button",
+          className: "TriLab-popup-btn-custom",
+          callback: "_test_button_click",
+        },
+      ],
+    });
+
+    geoLayer.on("load", (event) => {
+      console.log("GeoLayer 加载完成:", event.features.length, "个特征");
+
+      mapViewer.flyTo(
+        [13076598.606043056, 3749044.3999279696, 15000],
+        [13076598.606043056, 3749044.3999279696, 0],
+        { duration: 1500 },
+      );
+    });
+
+    geoLayer.on("error", (event) => {
+      console.error("GeoLayer 加载失败:", event.error);
+    });
+
+    geoLayer.on("flyToComplete", (event) => {
+      console.log("相机飞行完成:", event.position);
+    });
+
+    // geoLayer.on("click", (event) => {
+    //   console.log("点击特征:", event.feature);
+
+    //   // 安全检查：确保 event.feature 存在
+    //   if (!event.feature) {
+    //     console.warn("点击事件中没有特征信息");
+    //     return;
+    //   }
+
+    //   const properties = event.feature.properties || {};
+
+    //   let html = "";
+    //   for (const [key, value] of Object.entries(properties)) {
+    //     html += `<p><strong>${key}:</strong> ${value}</p>`;
+    //   }
+
+    //   featureContent.innerHTML = html;
+    //   featureInfo.style.display = "block";
+    // });
+
+    // 使用addLayer管理图层并将其添加到场景中
+    mapViewer.addLayer(geoLayer);
+
+    // 添加飞入定位按钮事件
+    document.getElementById("flyToButton").addEventListener("click", () => {
+      geoLayer.locateLayer(1500, 1.5); // duration, padding
+    });
+
+    // 添加切换点击事件按钮
+    const toggleClickButton = document.getElementById("toggleClickButton");
+    let clickEnabled = true;
+
+    toggleClickButton.addEventListener("click", () => {
+      clickEnabled = !clickEnabled;
+      geoLayer.allowClick = clickEnabled;
+
+      if (clickEnabled) {
+        toggleClickButton.textContent = "点击事件: 开启";
+        toggleClickButton.classList.remove("disabled");
+      } else {
+        toggleClickButton.textContent = "点击事件: 关闭";
+        toggleClickButton.classList.add("disabled");
+      }
+    });
+
+    // 添加切换图层可见性按钮
+    const toggleVisibilityButton = document.getElementById(
+      "toggleVisibilityButton",
+    );
+    let layerVisible = true;
+
+    toggleVisibilityButton.addEventListener("click", () => {
+      layerVisible = !layerVisible;
+      if (layerVisible) {
+        geoLayer.show();
+        toggleVisibilityButton.textContent = "图层显示: 可见";
+        toggleVisibilityButton.classList.remove("hidden");
+      } else {
+        geoLayer.hide();
+        toggleVisibilityButton.textContent = "图层显示: 隐藏";
+        toggleVisibilityButton.classList.add("hidden");
+      }
+    });
+
+    // 添加切换文字显示按钮
+    const toggleLabelsButton = document.getElementById("toggleLabelsButton");
+
+    toggleLabelsButton.addEventListener("click", () => {
+      debugger
+      if (geoLayer._labelsVisible) {
+        geoLayer.hideLabels();
+        toggleLabelsButton.textContent = "文字显示: 隐藏";
+        toggleLabelsButton.classList.add("hidden");
+      } else {
+        geoLayer.showLabels();
+        toggleLabelsButton.textContent = "文字显示: 可见";
+        toggleLabelsButton.classList.remove("hidden");
+      }
+    });
+
+    // 特征信息面板控制
+    const featureInfo = document.getElementById("featureInfo");
+    const featureContent = document.getElementById("featureContent");
+    const closeBtn = document.querySelector(".close-btn");
+
+    closeBtn.addEventListener("click", () => {
+      featureInfo.style.display = "none";
+    });
+
+    // 添加切换点样式按钮
+    const togglePointStyleButton = document.getElementById(
+      "togglePointStyleButton",
+    );
+    let isImagePoint = true;
+    const originalImageUrl = "./data/imgs/pins/4186382.png";
+    const originalColor = "#ff0000";
+    const originalSize = 20;
+
+    togglePointStyleButton.addEventListener("click", () => {
+      isImagePoint = !isImagePoint;
+
+      if (isImagePoint) {
+        // 切换为图片点
+        togglePointStyleButton.textContent = "点样式: 图片点";
+        togglePointStyleButton.classList.remove("default");
+
+        // 更新图层样式
+        geoLayer.updatePointStyle({
+          url: originalImageUrl,
+          color: originalColor,
+          size: originalSize,
+        });
+      } else {
+        // 切换为默认点
+        togglePointStyleButton.textContent = "点样式: 默认点";
+        togglePointStyleButton.classList.add("default");
+
+        // 更新图层样式
+        geoLayer.updatePointStyle({
+          url: null,
+          color: originalColor,
+          size: originalSize,
+        });
+      }
+    });
+    // 测试按钮点击事件的回调函数
+    window._test_button_click = function (data) {
+      console.log("详情按钮被点击了！");
+      console.log("原始数据:", data);
+      
+      // 处理数据格式：可能是 JSON 字符串或对象
+      let parsedData;
+      if (typeof data === 'string') {
+        // 如果是 JSON 字符串，解析为对象
+        try {
+          parsedData = JSON.parse(data);
+          console.log("解析后的数据:", parsedData);
+        } catch (error) {
+          console.error("JSON 解析错误:", error);
+          alert("数据格式错误，无法解析 JSON 字符串");
+          return;
+        }
+      } else if (Array.isArray(data)) {
+        // 如果是数组格式（旧版本兼容）
+        console.log("弹窗中显示的字段（使用显示名称）:", data[0]);
+        console.log("弹窗中未显示的字段（使用原始字段名）:", data[1]);
+        
+        let message = "弹窗数据：\n\n";
+        message += "弹窗中显示的字段（使用显示名称）：\n";
+        for (const [key, value] of Object.entries(data[0])) {
+          message += `${key}: ${value}\n`;
+        }
+        message += "\n弹窗中未显示的字段（使用原始字段名）：\n";
+        for (const [key, value] of Object.entries(data[1])) {
+          message += `${key}: ${value}\n`;
+        }
+        alert(message);
+        return;
+      } else {
+        // 如果是对象格式
+        parsedData = data;
+      }
+
+      // 显示所有属性
+      let message = "弹窗数据：\n\n";
+      message += "所有字段：\n";
+      
+      for (const [key, value] of Object.entries(parsedData)) {
+        message += `${key}: ${value}\n`;
+      }
+
+      alert(message);
+    };
+  </script>
+</html>

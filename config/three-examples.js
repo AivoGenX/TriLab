@@ -333,26 +333,22 @@ export default [
           description: "点图片",
         },
       },
-    ],
-  },
-  {
-    pid: "point",
-    name: "点图层",
-    children: [
+      // PointTextGraphic
       {
-        id: "PointGraphic",
-        name: "点要素",
+        id: "PointTextGraphic",
+        name: "点文本",
         author: "giser2017",
-        codeUrl: HOST + "/threeExamples/point/PointGraphic.html",
-        image: HOST + "/threeExamples/point/PointGraphic.png",
+        codeUrl: HOST + "/threeExamples/point/PointTextGraphic.html",
+        image: HOST + "/threeExamples/point/PointTextGraphic.png",
         meta: {
-          title: "点要素",
-          keywords: "点要素,点图层,GraphicLayer,PointGraphic",
-          description: "点要素图层示例，展示GraphicLayer和PointGraphic的基础功能",
+          title: "点文本",
+          keywords: "点文本",
+          description: "点文本",
         },
       },
     ],
   },
+
   {
     pid: "polyline",
     name: "线图层",
@@ -367,6 +363,19 @@ export default [
           title: "线要素",
           keywords: "线要素",
           description: "线要素",
+        },
+      },
+      // PolylineGraphicGUI
+      {
+        id: "PolylineGraphicGUI",
+        name: "线要素GUI",
+        author: "giser2017",
+        codeUrl: HOST + "/threeExamples/polyline/PolylineGraphicGUI.html",
+        image: HOST + "/threeExamples/polyline/PolylineGraphicGUI.png",
+        meta: {
+          title: "线要素GUI",
+          keywords: "线要素GUI",
+          description: "线要素GUI",
         },
       },
       {
@@ -438,6 +447,62 @@ export default [
       },
     ],
   },
+  // 增加图层分类
+  // 地理图层
+  {
+    pid: "geolayer",
+    name: "地理图层",
+    children: [
+      {
+        id: "geolayer",
+        name: "GeoLayer基础",
+        author: "giser2017",
+        codeUrl: HOST + "/threeExamples/layer/geolayer.html",
+        image: HOST + "/threeExamples/layer/geolayer.png",
+        meta: {
+          title: "GeoLayer基础",
+          keywords: "GeoLayer,地理图层,GeoJSON",
+          description: "GeoLayer基础示例，自动加载GeoJSON数据，支持点、线、面几何类型",
+        },
+      },
+      {
+        id: "GeoLayerLoad",
+        name: "GeoLayer加载",
+        author: "giser2017",
+        codeUrl: HOST + "/threeExamples/layer/GeoLayerLoad.html",
+        image: HOST + "/threeExamples/layer/GeoLayerLoad.png",
+        meta: {
+          title: "GeoLayer加载",
+          keywords: "GeoLayer,数据加载,按钮控制",
+          description: "GeoLayer数据加载示例，支持按钮控制加载和清除GeoJSON数据",
+        },
+      },
+      {
+        id: "GeoLayerPopup",
+        name: "GeoLayer弹窗",
+        author: "giser2017",
+        codeUrl: HOST + "/threeExamples/layer/GeoLayerPopup.html",
+        image: HOST + "/threeExamples/layer/GeoLayerPopup.png",
+        meta: {
+          title: "GeoLayer弹窗",
+          keywords: "GeoLayer,弹窗,点击事件,特征信息",
+          description: "GeoLayer弹窗示例，支持点击事件和特征信息展示，包含丰富的交互功能",
+        },
+      },
+      {
+        id: "GraphicLayerBtn",
+        name: "图形图层弹窗",
+        author: "giser2017",
+        codeUrl: HOST + "/threeExamples/layer/GraphicLayerBtn.html",
+        image: HOST + "/threeExamples/layer/GraphicLayerBtn.png",
+        meta: {
+          title: "图形图层弹窗",
+          keywords: "GraphicLayer,弹窗控制,GeoJSON加载",
+          description: "图形图层弹窗示例，支持GeoJSON数据加载和图形管理",
+        },
+      },
+    ],
+  },
   {
     gid: "Point_cloud",
     gname: "点云和全景图",
@@ -455,6 +520,24 @@ export default [
           keywords: "点云加载,场景设置",
           description: "点云加载示例，支持场景设置",
         },
+      },
+      {
+        pid: "pointcloud_filter",
+        name: "点云过滤分类",
+        children: [
+          {
+            id: "DrawBoxFilter",
+            name: "立方体过滤",
+            author: "giser2017",
+            codeUrl: HOST + "/threeExamples/PointCloud/DrawBoxFilter.html",
+            image: HOST + "/threeExamples/PointCloud/DrawBoxFilter.png",
+            meta: {
+              title: "立方体过滤",
+              keywords: "点云过滤,立方体过滤,DrawBoxFilter,空间过滤",
+              description: "点云立方体过滤示例，支持空间区域过滤功能",
+            },
+          },
+        ],
       },
     ],
   },

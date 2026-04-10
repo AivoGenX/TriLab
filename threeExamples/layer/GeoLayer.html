@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoLayer 示例</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body,
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+
+      .control-panel {
+        position: absolute;
+        z-index: 100;
+        margin: 10px;
+        padding: 15px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+      }
+
+      .control-panel h3 {
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .control-buttons {
+        margin-bottom: 15px;
+      }
+
+      .control-buttons input[type="button"] {
+        margin-right: 8px;
+        margin-bottom: 8px;
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f5f5f5;
+        cursor: pointer;
+      }
+
+      .control-buttons input[type="button"]:hover {
+        background-color: #e0e0e0;
+      }
+
+      .info-text {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+    </style>
+    <link rel="stylesheet" type="text/css" href="./css/TriLab.css" />
+  </head>
+  <body>
+    <!-- 控制面板 -->
+    <div class="control-panel">
+      <h3>GeoLayer图层示例</h3>
+      <div class="control-buttons">
+        <input type="button" id="clearLayer" value="清除图层" />
+        <input type="button" id="locateLayer" value="定位到图层" />
+      </div>
+      <div class="info-text">
+        [页面加载时自动加载示例数据]<br />
+        [示例数据包含点、线、面等几何类型]<br />
+        [点击图形可查看详情弹窗]
+      </div>
+    </div>
+
+    <!-- 3D 视图容器 -->
+    <div id="app"></div>
+
+    <script type="module">
+      import triLab from "./TriLab.js";
+      import * as THREE from "./three.module.js";
+
+      // 初始化地图
+      const map = new triLab.Map("app");
+      console.log("地图初始化完成");
+
+      // 加载点云数据作为背景
+      const pointcloud = new triLab.layer.PointCloudLayer();
+      map.addLayer(pointcloud);
+      console.log("点云图层添加完成");
+
+      pointcloud.addClouds(["./data/text.lab"]).then(() => {
+        map.fitToScreen();
+        console.log("点云数据加载完成");
+      });
+
+      // 初始化 GeoLayer
+      const geoLayer = new triLab.layer.GeoLayer({
+        id: "geojson-layer",
+        name: "GeoJSON 图层",
+        visible: true,
+        opacity: 1.0,
+        enablePick: true,
+        clickRadius: 10,
+        symbol: {
+          //  pointStyle: {
+          //   size: 20, // 点的大小
+          //   color: "#ff0000", // 点的颜色
+          // },
+
+          textStyle: { 
+            labelField: "name",
+            fontsize: 10, // 字体大小
+            textColor: { r: 255, g: 255, b: 255, a: 1.0 }, // 文本颜色：白色
+            backgroundColor: {
+              r: Math.floor(Math.random() * 256 * 256 * 256 / 65536), // 随机背景颜色的R分量
+              g: Math.floor(Math.random() * 256 * 256 * 256 / 256), // 随机背景颜色的G分量
+              b: Math.floor(Math.random() * 256 * 256 * 256), // 随机背景颜色的B分量
+              a: 0.8, // 背景透明度
+            },
+            borderColor: { r: 0, g: 0, b: 0, a: 1.0 }, // 边框颜色：黑色
+            borderThickness: 1, // 边框厚度
+            sizeAttenuation: false, // 禁用大小衰减
+            scaleXYZ: 0.01, // 缩放比例
+            offsetY: 0, // Y轴偏移量
+          },
+        },
+      });
+      map.addLayer(geoLayer);
+      console.log("GeoLayer 添加完成");
+
+      // GeoJSON 示例数据
+      const geoJSONData = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [5, 0, 0],
+            },
+            properties: {
+              name: "测试点",
+              name1: "111111111测试点",
+              color: "#ff0000",
+              size: 15,
+            },
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": [[-1, -1, 0], [1, 1, 0]]
+            },
+            "properties": {
+              "name": "测试线",
+              "color": "#00ff00",
+              "width": 3
+            }
+          },
+          {
+            "type": "Feature",
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [[[2, -2, 1], [4, 1, 1], [3, 2, 1], [1, 1, 1], [2, -2, 1]]]
+            },
+            "properties": {
+              "name": "测试面",
+                "name1": "111111111测试面",
+              "color": "#0000ff",
+              "opacity": 0.5
+            }
+          }
+        ],
+      };
+
+      // 页面加载完成后直接加载 GeoJSON 数据
+      const loadGeoJSONData = () => {
+        console.log("开始加载 GeoJSON 数据...");
+
+        // 使用 GeoLayer 的 setData 方法加载 GeoJSON 数据
+        geoLayer
+          .setData(geoJSONData, {
+            flyTo: true,
+          })
+          .then((layer) => {
+            console.log(
+              `GeoJSON 数据加载完成，创建了 ${layer.graphics.length} 个图形`,
+            );
+            layer.graphics.forEach((graphic, index) => {
+              console.log(
+                `图形 ${index + 1}: ${graphic.getType()} - ${graphic.getName()}`,
+              );
+            });
+          })
+          .catch((error) => {
+            console.log(`GeoJSON 数据加载失败: ${error.message}`);
+          });
+      };
+
+      // 在点云数据加载完成后执行
+      pointcloud.addClouds(["./data/text.lab"]).then(() => {
+        map.fitToScreen();
+        console.log("点云数据加载完成");
+
+        // 点云加载完成后加载 GeoJSON 数据
+        loadGeoJSONData();
+      });
+
+      // 清除图层按钮点击事件
+      document.getElementById("clearLayer").addEventListener("click", () => {
+        geoLayer.clear();
+        console.log("GeoLayer 已清空");
+      });
+
+      // 定位到图层按钮点击事件
+      document.getElementById("locateLayer").addEventListener("click", () => {
+        geoLayer.flyTo(1000);
+        console.log("已定位到 GeoLayer");
+      });
+
+      // 为 GeoLayer 添加点击事件监听
+      geoLayer.on("click", (event) => {
+        if (event.graphic) {
+          console.log(
+            `点击了图形: ${event.graphic.getType()} - ${event.graphic.getName()}`,
+          );
+          event.graphic.popup =
+            "<div style='padding: 12px;'>" + event.graphic.getName() + "</div>";
+          event.graphic.openPopup();
+        }
+      });
+
+      // 为 GeoLayer 添加加载完成事件监听
+      geoLayer.on("load", (event) => {
+        console.log(`GeoLayer 加载完成，共 ${event.features.length} 个要素`);
+      });
+
+      // 为 GeoLayer 添加错误事件监听
+      geoLayer.on("error", (event) => {
+        console.log(`GeoLayer 错误: ${event.error.message}`);
+      });
+    </script>
+  </body>
+</html>
